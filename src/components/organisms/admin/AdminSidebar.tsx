@@ -5,8 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 interface AdminSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  currentModule: 'dashboard' | 'create';
-  onSelectModule: (module: 'dashboard' | 'create') => void;
+  currentModule: 'dashboard' | 'create' | 'academic';
+  onSelectModule: (module: 'dashboard' | 'create' | 'academic') => void;
   onLogout: () => void;
   adminName?: string;
   adminInitial?: string;
@@ -103,9 +103,23 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               {currentModule === 'create' && <View style={styles.orangeDotRight} />}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sidebarMenuItem} onPress={onClose}>
-              <MaterialIcons name="school" size={20} color={theme.textSecondary} style={{ marginRight: 12 }} />
-              <Text style={[styles.sidebarMenuText, { color: theme.textSecondary }]}>Gestión Académica</Text>
+            <TouchableOpacity
+              style={currentModule === 'academic' ? styles.sidebarMenuItemActive : styles.sidebarMenuItem}
+              onPress={() => {
+                onSelectModule('academic');
+                onClose();
+              }}
+            >
+              <MaterialIcons
+                name="school"
+                size={20}
+                color={currentModule === 'academic' ? '#EA580C' : theme.textSecondary}
+                style={{ marginRight: 12 }}
+              />
+              <Text style={currentModule === 'academic' ? styles.sidebarMenuTextActive : [styles.sidebarMenuText, { color: theme.textSecondary }]}>
+                Gestión Académica
+              </Text>
+              {currentModule === 'academic' && <View style={styles.orangeDotRight} />}
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.sidebarMenuItem} onPress={onClose}>
