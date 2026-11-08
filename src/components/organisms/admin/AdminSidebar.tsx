@@ -5,8 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 interface AdminSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  currentModule: 'dashboard' | 'create' | 'academic' | 'services';
-  onSelectModule: (module: 'dashboard' | 'create' | 'academic' | 'services') => void;
+  currentModule: 'dashboard' | 'create' | 'academic' | 'services' | 'reports';
+  onSelectModule: (module: 'dashboard' | 'create' | 'academic' | 'services' | 'reports') => void;
   onLogout: () => void;
   adminName?: string;
   adminInitial?: string;
@@ -141,9 +141,23 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               {currentModule === 'services' && <View style={styles.orangeDotRight} />}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sidebarMenuItem} onPress={onClose}>
-              <MaterialIcons name="bar-chart" size={20} color={theme.textSecondary} style={{ marginRight: 12 }} />
-              <Text style={[styles.sidebarMenuText, { color: theme.textSecondary }]}>Centro de Reportes</Text>
+            <TouchableOpacity
+              style={currentModule === 'reports' ? styles.sidebarMenuItemActive : styles.sidebarMenuItem}
+              onPress={() => {
+                onSelectModule('reports');
+                onClose();
+              }}
+            >
+              <MaterialIcons
+                name="bar-chart"
+                size={20}
+                color={currentModule === 'reports' ? '#EA580C' : theme.textSecondary}
+                style={{ marginRight: 12 }}
+              />
+              <Text style={currentModule === 'reports' ? styles.sidebarMenuTextActive : [styles.sidebarMenuText, { color: theme.textSecondary }]}>
+                Centro de Reportes
+              </Text>
+              {currentModule === 'reports' && <View style={styles.orangeDotRight} />}
             </TouchableOpacity>
           </ScrollView>
 
