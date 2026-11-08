@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Switch,
+  Image,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
@@ -21,7 +21,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -54,22 +54,19 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Cabecera Institucional con Birrete y Marca EduCore */}
+        {/* Cabecera con Logo circular oficial y Portal de Acceso */}
         <View style={styles.header}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="school" size={32} color="#EA580C" />
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('@/assets/images/logo.png')}
+              style={styles.logo}
+              resizeMode="cover"
+            />
           </View>
-          <View style={styles.brandRow}>
-            <Text style={styles.brandTitle}>EduCore</Text>
-            <View style={styles.orangeDot} />
-          </View>
-          <Text style={styles.portalTag}>PORTAL UNIFICADO</Text>
-
-          <Text style={styles.welcomeTitle}>¡Bienvenido!</Text>
-          <Text style={styles.welcomeSubtitle}>Iniciá sesión para continuar</Text>
+          <Text style={styles.portalTitle}>Portal de Acceso</Text>
         </View>
 
-        {/* Tarjeta Flotante del Formulario */}
+        {/* Tarjeta del Formulario */}
         <View style={styles.card}>
           {errorMessage ? (
             <View style={styles.errorBox}>
@@ -93,8 +90,15 @@ export default function LoginScreen() {
             />
           </View>
 
-          {/* Campo Contraseña con botón ver/ocultar */}
-          <Text style={styles.label}>Contraseña</Text>
+          {/* Fila de Contraseña con enlace a ¿Olvidaste tu contraseña? arriba del recuadro */}
+          <View style={styles.passwordHeaderRow}>
+            <Text style={styles.label}>Contraseña</Text>
+            <TouchableOpacity activeOpacity={0.7}>
+              <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Input Contraseña con botón ver/ocultar */}
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed-outline" size={20} color="#94A3B8" style={styles.inputIconLeft} />
             <TextInput
@@ -117,25 +121,21 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Fila Recordarme y Olvidaste tu contraseña */}
-          <View style={styles.optionsRow}>
-            <View style={styles.rememberRow}>
-              <Switch
-                value={rememberMe}
-                onValueChange={setRememberMe}
-                trackColor={{ false: '#CBD5E1', true: '#EA580C' }}
-                thumbColor="#FFFFFF"
-                style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
-              />
-              <Text style={styles.rememberText}>Recordarme</Text>
-            </View>
-
-            <TouchableOpacity>
-              <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+          {/* Checkbox cuadrado (Mantener sesión iniciada) */}
+          <View style={styles.rememberRow}>
+            <TouchableOpacity
+              style={styles.checkboxContainer}
+              onPress={() => setRememberMe(!rememberMe)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                {rememberMe && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+              </View>
+              <Text style={styles.rememberText}>Mantener sesión iniciada</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Botón Principal Ingresar */}
+          {/* Botón Principal Acceso Seguro con flecha */}
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
@@ -146,35 +146,19 @@ export default function LoginScreen() {
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <View style={styles.buttonContent}>
-                <Text style={styles.buttonText}>Ingresar</Text>
+                <Text style={styles.buttonText}>Acceso Seguro</Text>
                 <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 8 }} />
               </View>
             )}
           </TouchableOpacity>
-
-          {/* Subtexto rol automático */}
-          <View style={styles.roleNotice}>
-            <Ionicons name="sparkles" size={14} color="#EA580C" style={{ marginRight: 4 }} />
-            <Text style={styles.roleNoticeText}>
-              El sistema detectará tu rol automáticamente
-            </Text>
-          </View>
         </View>
 
-        {/* Footer Institucional de Seguridad y Soporte */}
+        {/* Footer de Ayuda */}
         <View style={styles.footer}>
-          <View style={styles.sslRow}>
-            <Ionicons name="shield-checkmark-outline" size={16} color="#0284C7" style={{ marginRight: 6 }} />
-            <Text style={styles.sslText}>Conexión cifrada institucional SSL 256-bit</Text>
-          </View>
-
-          <View style={styles.supportRow}>
-            <Text style={styles.supportLabel}>¿Necesitás ayuda? </Text>
-            <TouchableOpacity style={styles.supportLinkRow}>
-              <Text style={styles.supportLink}>Contactar Soporte</Text>
-              <Ionicons name="open-outline" size={14} color="#EA580C" style={{ marginLeft: 2 }} />
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.supportLabel}>¿Necesitas ayuda para acceder a tu cuenta? </Text>
+          <TouchableOpacity activeOpacity={0.7}>
+            <Text style={styles.supportLink}>Contactar Soporte</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -196,50 +180,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: '#FFEDD5',
+  logoContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 4,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#FED7AA',
   },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  logo: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
   },
-  brandTitle: {
+  portalTitle: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#1E293B',
     letterSpacing: -0.5,
-  },
-  orangeDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: '#EA580C',
-    marginLeft: 4,
-    marginBottom: 2,
-  },
-  portalTag: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#64748B',
-    letterSpacing: 1.2,
-    marginTop: 2,
-    marginBottom: 16,
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  welcomeSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 4,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -256,17 +223,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#334155',
     marginBottom: 8,
-    marginTop: 4,
+  },
+  passwordHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  forgotText: {
+    fontSize: 13,
+    color: '#EA580C',
+    fontWeight: '600',
+    marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F8FAFC',
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 52,
     marginBottom: 16,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
   },
   inputIconLeft: {
@@ -277,27 +255,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#0F172A',
   },
-  optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 2,
-    marginBottom: 20,
-  },
   rememberRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 2,
+    marginBottom: 22,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  checkboxChecked: {
+    backgroundColor: '#EA580C',
+    borderColor: '#EA580C',
   },
   rememberText: {
     fontSize: 13,
-    color: '#334155',
-    marginLeft: 4,
+    color: '#475569',
     fontWeight: '500',
-  },
-  forgotText: {
-    fontSize: 13,
-    color: '#EA580C',
-    fontWeight: '600',
   },
   button: {
     backgroundColor: '#EA580C',
@@ -323,17 +309,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  roleNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 14,
-  },
-  roleNoticeText: {
-    fontSize: 12,
-    color: '#64748B',
-    fontStyle: 'italic',
-  },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -351,29 +326,14 @@ const styles = StyleSheet.create({
   },
   footer: {
     alignItems: 'center',
-    marginTop: 28,
-  },
-  sslRow: {
+    justifyContent: 'center',
+    marginTop: 26,
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sslText: {
-    fontSize: 12,
-    color: '#0284C7',
-    fontWeight: '500',
-  },
-  supportRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexWrap: 'wrap',
   },
   supportLabel: {
     fontSize: 13,
     color: '#64748B',
-  },
-  supportLinkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   supportLink: {
     fontSize: 13,
