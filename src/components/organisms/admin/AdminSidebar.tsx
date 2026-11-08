@@ -5,8 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 interface AdminSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  currentModule: 'dashboard' | 'create' | 'academic';
-  onSelectModule: (module: 'dashboard' | 'create' | 'academic') => void;
+  currentModule: 'dashboard' | 'create' | 'academic' | 'services';
+  onSelectModule: (module: 'dashboard' | 'create' | 'academic' | 'services') => void;
   onLogout: () => void;
   adminName?: string;
   adminInitial?: string;
@@ -122,9 +122,23 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               {currentModule === 'academic' && <View style={styles.orangeDotRight} />}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sidebarMenuItem} onPress={onClose}>
-              <MaterialIcons name="directions-bus" size={20} color={theme.textSecondary} style={{ marginRight: 12 }} />
-              <Text style={[styles.sidebarMenuText, { color: theme.textSecondary }]}>Servicios Escolares</Text>
+            <TouchableOpacity
+              style={currentModule === 'services' ? styles.sidebarMenuItemActive : styles.sidebarMenuItem}
+              onPress={() => {
+                onSelectModule('services');
+                onClose();
+              }}
+            >
+              <MaterialIcons
+                name="directions-bus"
+                size={20}
+                color={currentModule === 'services' ? '#EA580C' : theme.textSecondary}
+                style={{ marginRight: 12 }}
+              />
+              <Text style={currentModule === 'services' ? styles.sidebarMenuTextActive : [styles.sidebarMenuText, { color: theme.textSecondary }]}>
+                Servicios Escolares
+              </Text>
+              {currentModule === 'services' && <View style={styles.orangeDotRight} />}
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.sidebarMenuItem} onPress={onClose}>

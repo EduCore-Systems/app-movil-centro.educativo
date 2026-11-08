@@ -12,6 +12,7 @@ import AdminSidebar from '../components/organisms/admin/AdminSidebar';
 import AdminDashboardTab from '../components/organisms/admin/AdminDashboardTab';
 import AdminCreationTab from '../components/organisms/admin/AdminCreationTab';
 import AdminAcademicTab from '../components/organisms/admin/AdminAcademicTab';
+import AdminServicesTab from '../components/organisms/admin/AdminServicesTab';
 
 // Import Types
 import { Student } from '../components/molecules/StudentCard';
@@ -21,7 +22,7 @@ export default function HomeScreen() {
   const { user, logout } = useAuth();
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [currentModule, setCurrentModule] = useState<'dashboard' | 'create' | 'academic'>('dashboard');
+  const [currentModule, setCurrentModule] = useState<'dashboard' | 'create' | 'academic' | 'services'>('dashboard');
 
   const [students, setStudents] = useState<Student[]>([]);
   const [staffList, setStaffList] = useState<Staff[]>([]);
@@ -217,8 +218,10 @@ export default function HomeScreen() {
         adminInitial={adminInitial}
       />
 
-      {/* ── ORGANISMO CENTRAL ACTIVO: DASHBOARD, CREACIÓN O GESTIÓN ACADÉMICA ── */}
-      {currentModule === 'academic' ? (
+      {/* ── ORGANISMO CENTRAL ACTIVO: DASHBOARD, CREACIÓN, GESTIÓN ACADÉMICA O SERVICIOS ── */}
+      {currentModule === 'services' ? (
+        <AdminServicesTab isDarkMode={isDarkMode} />
+      ) : currentModule === 'academic' ? (
         <AdminAcademicTab isDarkMode={isDarkMode} />
       ) : currentModule === 'create' ? (
         <AdminCreationTab
