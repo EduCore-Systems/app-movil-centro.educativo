@@ -105,7 +105,7 @@ export const AdminReportsTab: React.FC<AdminReportsTabProps> = ({ isDarkMode = f
     validStudents.forEach((s) => {
       subjects.forEach((sub) => {
         const c = courses.find((x) => x.id === sub.courseId);
-        if (c && (c.name === s.curso || (s.nivel && c.level === s.nivel.toLowerCase()))) {
+        if (c && (c.name === s.curso || c.id === s.curso)) {
           rows.push({
             id: `${s.id}-${sub.id}`,
             cells: [
@@ -220,41 +220,41 @@ export const AdminReportsTab: React.FC<AdminReportsTabProps> = ({ isDarkMode = f
 
   // 7. Alumnos por Transporte
   const getTransportReport = () => {
-    const rows: GroupedRow[] = validStudents.map((s) => {
-      const hasRoute = Boolean(
-        s.transportRouteId ||
-          (s.transporte_recorrido &&
-            s.transporte_recorrido !== 'none' &&
-            s.transporte_recorrido !== 'Sin servicio' &&
-            s.transporte_recorrido !== 'No utiliza transporte')
-      );
+    const rows: GroupedRow[] = [];
+    validStudents
+      .filter((s) => {
+        const t = s.transportRouteId || s.transporte_recorrido;
+        return (
+          t &&
+          t !== 'none' &&
+          t !== 'Sin servicio' &&
+          t !== 'No utiliza transporte'
+        );
+      })
+      .forEach((s) => {
+        const routeVal = s.transportRouteId || s.transporte_recorrido;
+        const routeObj = routes.find((r) => r.id === routeVal || r.name === routeVal);
+        const routeName = routeObj ? routeObj.name : (routeVal || 'Sin asignar');
 
-      const routeObj = hasRoute
-        ? routes.find((r) => r.id === s.transportRouteId || r.name === s.transporte_recorrido)
-        : null;
+        rows.push({
+          id: s.id,
+          cells: [
+            <Text
+              key="rt"
+              style={{
+                color: '#EA580C',
+                fontWeight: '700',
+                fontSize: 13,
+              }}
+            >
+              {routeName}
+            </Text>,
+            s.nombre,
+            <Badge key="lvl" type="nivel" value={s.nivel} isDarkMode={isDarkMode} />,
+          ],
+        });
+      });
 
-      const routeName = routeObj ? routeObj.name : 'No utiliza';
-
-      return {
-        id: s.id,
-        cells: [
-          <Text
-            key="rt"
-            style={{
-              color: routeObj ? '#EA580C' : isDarkMode ? '#94A3B8' : '#EA580C',
-              fontWeight: '700',
-              fontSize: 13,
-            }}
-          >
-            {routeName}
-          </Text>,
-          s.nombre,
-          <Badge key="lvl" type="nivel" value={s.nivel} isDarkMode={isDarkMode} />,
-        ],
-      };
-    });
-
-    // Ordenar: primero los que no utilizan o alfabéticamente por recorrido
     rows.sort((a, b) => {
       const rA = (a.cells[0] as any).props.children || '';
       const rB = (b.cells[0] as any).props.children || '';
