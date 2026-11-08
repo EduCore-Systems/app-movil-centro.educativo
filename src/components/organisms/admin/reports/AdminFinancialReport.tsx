@@ -6,7 +6,8 @@ import {
   ActivityIndicator,
   Alert,
   StyleSheet,
-  ScrollView,
+  Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Badge from '../../../atoms/Badge';
@@ -29,6 +30,10 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
   const [levelFilter, setLevelFilter] = useState<'todos' | 'inicial' | 'primaria' | 'secundaria'>('todos');
   const [notifiedStudents, setNotifiedStudents] = useState<Record<string, 'enviando' | 'enviado'>>({});
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Modales de dropdown estilo Web
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [levelModalVisible, setLevelModalVisible] = useState(false);
 
   useEffect(() => {
     fetchPayments();
@@ -122,6 +127,22 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
     subColor: isDarkMode ? '#94A3B8' : '#64748B',
     desgloseBg: isDarkMode ? '#0F172A80' : '#F8FAFC',
     kpiCardBg: isDarkMode ? '#1E293B' : '#FFFFFF',
+    dropdownBtnBg: isDarkMode ? '#1E293B' : '#0F172A',
+    modalBg: isDarkMode ? '#1E293B' : '#FFFFFF',
+    modalBorder: isDarkMode ? '#334155' : '#E2E8F0',
+  };
+
+  const statusLabelMap: Record<string, string> = {
+    todos: 'Todos los Estados',
+    pagado: '✓ Al Día (Pagado)',
+    pendiente: '⚠️ En Mora (Pendiente)',
+  };
+
+  const levelLabelMap: Record<string, string> = {
+    todos: 'Todos los Niveles',
+    inicial: 'Inicial',
+    primaria: 'Primaria',
+    secundaria: 'Secundaria',
   };
 
   if (loading) {
@@ -142,7 +163,7 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
         {/* KPI 1: Facturación Total */}
         <View style={[styles.kpiCard, { backgroundColor: theme.kpiCardBg, borderColor: theme.border }]}>
           <View style={[styles.kpiIconBox, { backgroundColor: isDarkMode ? '#334155' : '#F1F5F9' }]}>
-            <MaterialIcons name="account-balance-wallet" size={22} color={isDarkMode ? '#CBD5E1' : '#475569'} />
+            <MaterialIcons name="account-balance-wallet" size={24} color={isDarkMode ? '#CBD5E1' : '#475569'} />
           </View>
           <View style={styles.kpiContent}>
             <Text style={[styles.kpiLabel, { color: theme.subColor }]}>FACTURACIÓN MES</Text>
@@ -158,7 +179,7 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
         {/* KPI 2: Recaudación Percibida */}
         <View style={[styles.kpiCard, { backgroundColor: theme.kpiCardBg, borderColor: theme.border }]}>
           <View style={[styles.kpiIconBox, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
-            <MaterialIcons name="payments" size={22} color="#10B981" />
+            <MaterialIcons name="payments" size={24} color="#10B981" />
           </View>
           <View style={styles.kpiContent}>
             <Text style={[styles.kpiLabel, { color: '#059669' }]}>TOTAL COBRADO</Text>
@@ -174,7 +195,7 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
         {/* KPI 3: Saldo en Mora */}
         <View style={[styles.kpiCard, { backgroundColor: theme.kpiCardBg, borderColor: theme.border }]}>
           <View style={[styles.kpiIconBox, { backgroundColor: 'rgba(239, 68, 68, 0.12)' }]}>
-            <MaterialIcons name="pending-actions" size={22} color="#EF4444" />
+            <MaterialIcons name="pending-actions" size={24} color="#EF4444" />
           </View>
           <View style={styles.kpiContent}>
             <Text style={[styles.kpiLabel, { color: '#E11D48' }]}>SALDO EN MORA</Text>
@@ -190,7 +211,7 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
         {/* KPI 4: Tasa de Cobranza */}
         <View style={[styles.kpiCard, { backgroundColor: theme.kpiCardBg, borderColor: theme.border }]}>
           <View style={[styles.kpiIconBox, { backgroundColor: 'rgba(234, 88, 12, 0.12)' }]}>
-            <MaterialIcons name="donut-large" size={22} color="#EA580C" />
+            <MaterialIcons name="donut-large" size={24} color="#EA580C" />
           </View>
           <View style={styles.kpiContent}>
             <Text style={[styles.kpiLabel, { color: '#EA580C' }]}>EFECTIVIDAD DE COBRO</Text>
@@ -200,13 +221,13 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
         </View>
       </View>
 
-      {/* ── 2. DESGLOSE DE INGRESOS POR CONCEPTO ── */}
+      {/* ── 2. DESGLOSE DE INGRESOS INSTITUCIONALES ── */}
       <View style={[styles.desgloseSection, { backgroundColor: theme.desgloseBg, borderColor: theme.border }]}>
         <View style={styles.desgloseHeader}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <MaterialIcons name="pie-chart" size={18} color="#EA580C" style={{ marginRight: 6 }} />
             <Text style={[styles.desgloseTitle, { color: theme.titleColor }]}>
-              Composición de Ingresos
+              Composición de Ingresos Institucionales
             </Text>
           </View>
           <Text style={[styles.desgloseCycle, { color: theme.subColor }]}>Ciclo Octubre 2026</Text>
@@ -237,7 +258,7 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
             <Text style={[styles.conceptAmount, { color: theme.titleColor }]}>
               ${totalTransporte.toLocaleString('es-AR')}
             </Text>
-            <Text style={[styles.conceptSub, { color: theme.subColor }]}>Logística micros</Text>
+            <Text style={[styles.conceptSub, { color: theme.subColor }]}>Logística de micros</Text>
           </View>
 
           {/* Talleres Deportivos */}
@@ -246,110 +267,51 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
             <Text style={[styles.conceptAmount, { color: theme.titleColor }]}>
               ${totalDeportes.toLocaleString('es-AR')}
             </Text>
-            <Text style={[styles.conceptSub, { color: theme.subColor }]}>Extracurriculares</Text>
+            <Text style={[styles.conceptSub, { color: theme.subColor }]}>Actividades extracurriculares</Text>
           </View>
         </View>
       </View>
 
-      {/* ── 3. FILTROS DE LA NÓMINA ── */}
+      {/* ── 3. NÓMINA DE COBRANZAS CON DROPDOWNS ESTILO WEB ── */}
       <View style={styles.nominaHeader}>
-        <View>
+        <View style={{ marginBottom: 12 }}>
           <Text style={[styles.nominaTitle, { color: theme.titleColor }]}>
-            Nómina de Cobranzas y Morosidad
+            Nómina de Cobranzas y Estado de Alumnos
           </Text>
           <Text style={[styles.nominaSub, { color: theme.subColor }]}>
-            Control de cobranzas con acceso a recordatorios por correo a los tutores.
+            Listado detallado con acceso a recordatorios de pago por correo a los tutores.
           </Text>
         </View>
 
-        {/* Chips de filtro por Estado */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
-          <View style={styles.chipRow}>
-            {(['todos', 'pagado', 'pendiente'] as const).map((st) => (
-              <TouchableOpacity
-                key={st}
-                onPress={() => setStatusFilter(st)}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor:
-                      statusFilter === st
-                        ? '#EA580C'
-                        : isDarkMode
-                        ? '#334155'
-                        : '#F1F5F9',
-                    borderColor: statusFilter === st ? '#EA580C' : theme.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    {
-                      color:
-                        statusFilter === st
-                          ? '#FFFFFF'
-                          : isDarkMode
-                          ? '#CBD5E1'
-                          : '#475569',
-                      fontWeight: statusFilter === st ? '800' : '600',
-                    },
-                  ]}
-                >
-                  {st === 'todos'
-                    ? 'Todos los Estados'
-                    : st === 'pagado'
-                    ? '✓ Al Día (Pagado)'
-                    : '⚠️ En Mora (Pendiente)'}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+        {/* Botones Dropdown estilo Web (píldoras oscuras como en la captura) */}
+        <View style={styles.dropdownButtonsRow}>
+          {/* Dropdown 1: Estados */}
+          <TouchableOpacity
+            style={[styles.dropdownPill, { backgroundColor: theme.dropdownBtnBg }]}
+            onPress={() => setStatusModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.dropdownPillText} numberOfLines={1}>
+              {statusLabelMap[statusFilter]}
+            </Text>
+            <MaterialIcons name="arrow-drop-down" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
 
-        {/* Chips de filtro por Nivel */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
-          <View style={styles.chipRow}>
-            {(['todos', 'inicial', 'primaria', 'secundaria'] as const).map((lvl) => (
-              <TouchableOpacity
-                key={lvl}
-                onPress={() => setLevelFilter(lvl)}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor:
-                      levelFilter === lvl
-                        ? '#2563EB'
-                        : isDarkMode
-                        ? '#1E293B'
-                        : '#FFFFFF',
-                    borderColor: levelFilter === lvl ? '#2563EB' : theme.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    {
-                      color:
-                        levelFilter === lvl
-                          ? '#FFFFFF'
-                          : isDarkMode
-                          ? '#94A3B8'
-                          : '#64748B',
-                      fontWeight: levelFilter === lvl ? '800' : '600',
-                    },
-                  ]}
-                >
-                  {lvl === 'todos' ? 'Todos los Niveles' : lvl.toUpperCase()}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+          {/* Dropdown 2: Niveles */}
+          <TouchableOpacity
+            style={[styles.dropdownPill, { backgroundColor: theme.dropdownBtnBg }]}
+            onPress={() => setLevelModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.dropdownPillText} numberOfLines={1}>
+              {levelLabelMap[levelFilter]}
+            </Text>
+            <MaterialIcons name="arrow-drop-down" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* ── 4. LISTA DE COBRANZAS (CARDS MÓVILES) ── */}
+      {/* ── 4. LISTA DE COBRANZAS (CARDS MÓVILES DETALLADAS) ── */}
       <View style={{ marginTop: 14 }}>
         {filteredPayments.length === 0 ? (
           <View style={[styles.emptyBox, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
@@ -375,7 +337,7 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
                   },
                 ]}
               >
-                {/* Cabecera de Alumno */}
+                {/* Fila Estudiante y Nivel */}
                 <View style={styles.cardHeaderRow}>
                   <View style={{ flex: 1, marginRight: 8 }}>
                     <Text style={[styles.studentName, { color: theme.titleColor }]} numberOfLines={1}>
@@ -390,9 +352,9 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
                   <Badge type="nivel" value={p.nivel} isDarkMode={isDarkMode} />
                 </View>
 
-                {/* Info de Tutor y Vencimiento */}
+                {/* Tutor y Estado */}
                 <View style={[styles.tutorBox, { backgroundColor: isDarkMode ? '#0F172A50' : '#F8FAFC' }]}>
-                  <View style={{ flex: 1 }}>
+                  <View style={{ flex: 1, marginRight: 8 }}>
                     <Text style={[styles.tutorEmail, { color: theme.titleColor }]} numberOfLines={1}>
                       {p.parentEmail}
                     </Text>
@@ -401,15 +363,13 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
                     </Text>
                   </View>
 
-                  {/* Estado Badge */}
+                  {/* Estado Badge estilo Web (• Pendiente / • Pagado) */}
                   <View
                     style={[
                       styles.statusPill,
                       {
-                        backgroundColor: isPaid
-                          ? 'rgba(16, 185, 129, 0.12)'
-                          : 'rgba(239, 68, 68, 0.12)',
-                        borderColor: isPaid ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+                        backgroundColor: isPaid ? '#ECFDF5' : '#FEF2F2',
+                        borderColor: isPaid ? '#A7F3D0' : '#FECDD3',
                       },
                     ]}
                   >
@@ -422,7 +382,7 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
                     <Text
                       style={[
                         styles.statusPillText,
-                        { color: isPaid ? '#059669' : '#DC2626' },
+                        { color: isPaid ? '#047857' : '#B91C1C' },
                       ]}
                     >
                       {isPaid ? 'Pagado' : 'Pendiente'}
@@ -431,7 +391,7 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
                 </View>
 
                 {/* Desglose de Conceptos */}
-                <View style={styles.desgloseRow}>
+                <View style={styles.desgloseContainer}>
                   <Text style={[styles.breakdownItem, { color: theme.subColor }]}>
                     Base: ${(p.baseTuition || 0).toLocaleString('es-AR')}
                   </Text>
@@ -442,17 +402,17 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
                   )}
                   {(p.transportAmount || 0) > 0 && (
                     <Text style={[styles.breakdownItem, { color: '#0284C7' }]}>
-                      + Transp: ${(p.transportAmount || 0).toLocaleString('es-AR')}
+                      + Transporte: ${(p.transportAmount || 0).toLocaleString('es-AR')}
                     </Text>
                   )}
                   {(p.sportsAmount || 0) > 0 && (
                     <Text style={[styles.breakdownItem, { color: '#059669' }]}>
-                      + Dep: ${(p.sportsAmount || 0).toLocaleString('es-AR')}
+                      + Deportes: ${(p.sportsAmount || 0).toLocaleString('es-AR')}
                     </Text>
                   )}
                 </View>
 
-                {/* Total Facturado y Acciones */}
+                {/* Footer: Total Facturado y Acciones */}
                 <View style={[styles.cardFooter, { borderTopColor: theme.border }]}>
                   <View>
                     <Text style={[styles.totalLabel, { color: theme.subColor }]}>TOTAL FACTURADO</Text>
@@ -464,12 +424,9 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
                   {/* Acciones */}
                   <View style={styles.actionsBox}>
                     {isPaid ? (
-                      <View style={styles.paidBadgeBox}>
-                        <MaterialIcons name="check-circle" size={16} color="#10B981" />
-                        <Text style={[styles.paidAtText, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>
-                          Abonado {p.paidAt || '04/10'}
-                        </Text>
-                      </View>
+                      <Text style={[styles.paidAtText, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>
+                        Abonado {p.paidAt || '04/10/2026'}
+                      </Text>
                     ) : (
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         {/* Botón Avisar Deuda */}
@@ -479,20 +436,21 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
                           style={[
                             styles.notifyBtn,
                             notifState === 'enviado' && {
-                              backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                              backgroundColor: '#ECFDF5',
                               borderColor: '#10B981',
                             },
                           ]}
+                          activeOpacity={0.7}
                         >
                           <MaterialIcons
-                            name={notifState === 'enviado' ? 'done' : 'mail'}
-                            size={14}
-                            color={notifState === 'enviado' ? '#059669' : '#EA580C'}
+                            name={notifState === 'enviado' ? 'done' : 'mail-outline'}
+                            size={15}
+                            color={notifState === 'enviado' ? '#047857' : '#EA580C'}
                           />
                           <Text
                             style={[
                               styles.notifyBtnText,
-                              { color: notifState === 'enviado' ? '#059669' : '#EA580C' },
+                              { color: notifState === 'enviado' ? '#047857' : '#EA580C' },
                             ]}
                           >
                             {notifState === 'enviado'
@@ -503,19 +461,17 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
                           </Text>
                         </TouchableOpacity>
 
-                        {/* Botón Cobrar en Caja */}
+                        {/* Botón Cobrar en Caja (icono de check en círculo) */}
                         <TouchableOpacity
                           onPress={() => handleMarkAsPaid(p)}
                           disabled={isBusy}
-                          style={styles.payBtn}
+                          style={styles.payIconBtn}
+                          activeOpacity={0.7}
                         >
                           {isBusy ? (
-                            <ActivityIndicator size="small" color="#FFFFFF" />
+                            <ActivityIndicator size="small" color="#059669" />
                           ) : (
-                            <>
-                              <MaterialIcons name="check" size={14} color="#FFFFFF" />
-                              <Text style={styles.payBtnText}>Cobrar</Text>
-                            </>
+                            <MaterialIcons name="check-circle" size={22} color="#059669" />
                           )}
                         </TouchableOpacity>
                       </View>
@@ -527,6 +483,80 @@ export const AdminFinancialReport: React.FC<AdminFinancialReportProps> = ({
           })
         )}
       </View>
+
+      {/* ── MODAL DROPDOWN ESTADOS ── */}
+      <Modal visible={statusModalVisible} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setStatusModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalCard, { backgroundColor: theme.modalBg, borderColor: theme.modalBorder }]}>
+              <Text style={[styles.modalTitle, { color: theme.titleColor }]}>Filtrar por Estado</Text>
+              {(['todos', 'pagado', 'pendiente'] as const).map((st) => (
+                <TouchableOpacity
+                  key={st}
+                  style={[
+                    styles.modalOption,
+                    statusFilter === st && { backgroundColor: isDarkMode ? '#33415550' : '#F8FAFC' },
+                  ]}
+                  onPress={() => {
+                    setStatusFilter(st);
+                    setStatusModalVisible(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.modalOptionText,
+                      { color: statusFilter === st ? '#EA580C' : theme.titleColor },
+                      statusFilter === st && { fontWeight: '700' },
+                    ]}
+                  >
+                    {statusLabelMap[st]}
+                  </Text>
+                  {statusFilter === st && (
+                    <MaterialIcons name="check" size={18} color="#EA580C" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* ── MODAL DROPDOWN NIVELES ── */}
+      <Modal visible={levelModalVisible} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setLevelModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalCard, { backgroundColor: theme.modalBg, borderColor: theme.modalBorder }]}>
+              <Text style={[styles.modalTitle, { color: theme.titleColor }]}>Filtrar por Nivel</Text>
+              {(['todos', 'inicial', 'primaria', 'secundaria'] as const).map((lvl) => (
+                <TouchableOpacity
+                  key={lvl}
+                  style={[
+                    styles.modalOption,
+                    levelFilter === lvl && { backgroundColor: isDarkMode ? '#33415550' : '#F8FAFC' },
+                  ]}
+                  onPress={() => {
+                    setLevelFilter(lvl);
+                    setLevelModalVisible(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.modalOptionText,
+                      { color: levelFilter === lvl ? '#2563EB' : theme.titleColor },
+                      levelFilter === lvl && { fontWeight: '700' },
+                    ]}
+                  >
+                    {levelLabelMap[lvl]}
+                  </Text>
+                  {levelFilter === lvl && (
+                    <MaterialIcons name="check" size={18} color="#2563EB" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 };
@@ -646,18 +676,27 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginTop: 2,
   },
-  chipRow: {
+  dropdownButtonsRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
+    marginTop: 4,
   },
-  filterChip: {
+  dropdownPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 9,
     paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 14,
+    elevation: 1,
   },
-  filterChipText: {
+  dropdownPillText: {
+    color: '#FFFFFF',
     fontSize: 12,
+    fontWeight: '700',
+    flex: 1,
+    marginRight: 4,
   },
   emptyBox: {
     padding: 32,
@@ -726,20 +765,20 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    marginRight: 4,
+    marginRight: 5,
   },
   statusPillText: {
     fontSize: 11,
     fontWeight: '700',
   },
-  desgloseRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  desgloseContainer: {
+    flexDirection: 'column',
+    gap: 2,
     marginBottom: 10,
+    paddingLeft: 4,
   },
   breakdownItem: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   cardFooter: {
@@ -757,16 +796,11 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#0F172A',
+    marginTop: 1,
   },
   actionsBox: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  paidBadgeBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
   },
   paidAtText: {
     fontSize: 11,
@@ -776,30 +810,58 @@ const styles = StyleSheet.create({
   notifyBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-    backgroundColor: 'rgba(234, 88, 12, 0.1)',
-    borderWidth: 1,
-    borderColor: '#EA580C40',
-    gap: 4,
-  },
-  notifyBtnText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  payBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
-    backgroundColor: '#059669',
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FED7AA',
     gap: 4,
   },
-  payBtnText: {
-    fontSize: 11,
+  notifyBtnText: {
+    fontSize: 12,
     fontWeight: '700',
-    color: '#FFFFFF',
+  },
+  payIconBtn: {
+    padding: 4,
+    borderRadius: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  modalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+  },
+  modalOptionText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
