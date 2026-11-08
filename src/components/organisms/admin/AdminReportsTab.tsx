@@ -5,6 +5,7 @@ import ReportTypePicker, { ReportType } from '../../molecules/ReportTypePicker';
 import StudentIndividualReport from './reports/StudentIndividualReport';
 import TeacherIndividualReport from './reports/TeacherIndividualReport';
 import GroupedListReport, { GroupedRow } from './reports/GroupedListReport';
+import AdminFinancialReport from './reports/AdminFinancialReport';
 import Badge from '../../atoms/Badge';
 import EmptyState from '../../molecules/EmptyState';
 import { getCourses, getSubjects, getSports, getSchedules, getStaffTeachers } from '../../../services/academicService';
@@ -354,12 +355,7 @@ export const AdminReportsTab: React.FC<AdminReportsTabProps> = ({ isDarkMode = f
           {reportType === 'transport' && getTransportReport()}
 
           {reportType === 'financial' && (
-            <EmptyState
-              icon="payments"
-              title="Reporte Financiero (Fase 3)"
-              subtitle="El panel de estado de cobranzas y morosidad estará disponible en la siguiente etapa."
-              isDarkMode={isDarkMode}
-            />
+            <AdminFinancialReport isDarkMode={isDarkMode} />
           )}
         </View>
       )}
