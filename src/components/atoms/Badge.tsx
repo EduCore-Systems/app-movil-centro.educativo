@@ -14,7 +14,7 @@ export const Badge: React.FC<BadgeProps> = ({ type, value = '', isDarkMode = fal
     return (
       <View style={styles.adminLevelBadge}>
         <View style={styles.greenDot} />
-        <Text style={styles.adminLevelText}>Nivel Administrador</Text>
+        <Text style={styles.adminLevelText}>{value || 'Nivel Adm'}</Text>
       </View>
     );
   }
