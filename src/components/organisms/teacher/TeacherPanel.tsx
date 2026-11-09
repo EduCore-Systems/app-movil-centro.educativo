@@ -16,7 +16,7 @@ import {
   TeacherCourseSubject,
   TeacherProfileData,
   DEFAULT_TEACHER,
-  getTeacherSubjects,
+  getTeacherAcademicData,
 } from '../../../services/teacherService';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -36,6 +36,7 @@ export const TeacherPanel: React.FC<TeacherPanelProps> = ({
     email: user?.email || DEFAULT_TEACHER.email,
   });
   const [subjects, setSubjects] = useState<TeacherCourseSubject[]>([]);
+  const [sportsCount, setSportsCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TeacherTab>('cursos');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -48,8 +49,19 @@ export const TeacherPanel: React.FC<TeacherPanelProps> = ({
     const fetchCourses = async () => {
       setLoading(true);
       try {
-        const subs = await getTeacherSubjects();
-        if (isMounted) setSubjects(subs);
+        const academicData = await getTeacherAcademicData(user);
+        if (isMounted) {
+          setSubjects(academicData.subjects);
+          setSportsCount(academicData.sportsCount);
+          if (user?.nombre) {
+            setTeacher(prev => ({
+              ...prev,
+              nombre: user.nombre || prev.nombre,
+              email: user.email || prev.email,
+              role: user.role || prev.role,
+            }));
+          }
+        }
       } catch (err) {
         console.warn('Error cargando materias de docente:', err);
       } finally {
@@ -115,6 +127,7 @@ export const TeacherPanel: React.FC<TeacherPanelProps> = ({
             {activeTab === 'cursos' && (
               <TeacherCoursesTab
                 subjects={subjects}
+                sportsCount={sportsCount}
                 isDarkMode={isDarkMode}
                 onNavigateToAttendance={handleNavigateToAttendance}
               />

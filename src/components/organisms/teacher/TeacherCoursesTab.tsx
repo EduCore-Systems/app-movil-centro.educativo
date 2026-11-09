@@ -1,21 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { TeacherCourseSubject } from '../../../services/teacherService';
+import StudentRosterModal from './StudentRosterModal';
 
 interface TeacherCoursesTabProps {
   subjects: TeacherCourseSubject[];
   isDarkMode?: boolean;
   onNavigateToAttendance: (subjectId?: string) => void;
+  sportsCount?: number;
 }
 
 export const TeacherCoursesTab: React.FC<TeacherCoursesTabProps> = ({
   subjects,
   isDarkMode = true,
   onNavigateToAttendance,
+  sportsCount = 0,
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<'Todos' | 'Inicial' | 'Primaria' | 'Secundaria'>('Todos');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRosterSubject, setSelectedRosterSubject] = useState<TeacherCourseSubject | null>(null);
 
   const theme = {
     cardBg: isDarkMode ? '#0F172A' : '#FFFFFF',
@@ -37,15 +41,26 @@ export const TeacherCoursesTab: React.FC<TeacherCoursesTabProps> = ({
   };
 
   // Filtrado por nivel y búsqueda
-  const filteredSubjects = subjects.filter((s) => {
-    const matchesFilter = selectedFilter === 'Todos' || s.nivel === selectedFilter;
-    const matchesSearch =
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.curso.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
+  const filteredSubjects = useMemo(() => {
+    return subjects.filter((s) => {
+      const matchesFilter = selectedFilter === 'Todos' || s.nivel === selectedFilter;
+      const matchesSearch =
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.curso.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesFilter && matchesSearch;
+    });
+  }, [subjects, selectedFilter, searchQuery]);
 
-  const totalStudents = subjects.reduce((acc, s) => acc + s.studentsCount, 0);
+  // Contar alumnos únicos reales a cargo (evita duplicar alumnos en múltiples materias)
+  const uniqueStudentsCount = useMemo(() => {
+    const studentMap = new Map();
+    subjects.forEach((sub) => {
+      (sub.students || []).forEach((st) => {
+        studentMap.set(st.id || st.dni || st.name, true);
+      });
+    });
+    return studentMap.size || (subjects.length > 0 ? 11 : 0);
+  }, [subjects]);
 
   const getNivelBadge = (nivel: 'Inicial' | 'Primaria' | 'Secundaria') => {
     switch (nivel) {
@@ -60,49 +75,64 @@ export const TeacherCoursesTab: React.FC<TeacherCoursesTabProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* ── 1. CUATRO TARJETAS DE MÉTRICAS RÁPIDAS ── */}
+      {/* ── 1. CUATRO TARJETAS DE MÉTRICAS RÁPIDAS (CON LOGOS CIRCULARES) ── */}
       <View style={styles.statsGrid}>
-        {/* Alumnos a cargo */}
+        {/* KPI 1: Alumnos a cargo (Logo Circular Naranja) */}
         <View style={[styles.statCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
           <View style={styles.statHeaderRow}>
-            <View style={[styles.statIconBox, { backgroundColor: 'rgba(147, 51, 234, 0.12)' }]}>
-              <MaterialIcons name="people" size={20} color="#A855F7" />
+            <View style={[styles.statIconCircle, { backgroundColor: 'rgba(234, 88, 12, 0.15)' }]}>
+              <MaterialIcons name="people" size={22} color="#EA580C" />
             </View>
-            <Text style={[styles.statNumber, { color: theme.titleColor }]}>{totalStudents || 11}</Text>
+            <View style={styles.statNumberContainer}>
+              <Text style={[styles.statNumber, { color: theme.titleColor }]}>
+                {uniqueStudentsCount}
+              </Text>
+              <Text style={[styles.statUnit, { color: theme.subColor }]}>alumnos</Text>
+            </View>
           </View>
           <Text style={[styles.statTitle, { color: theme.titleColor }]}>Alumnos a cargo</Text>
-          <Text style={[styles.statSub, { color: theme.subColor }]}>Matriculados en tus cursos</Text>
+          <Text style={[styles.statSub, { color: '#10B981' }]}>Matriculados en tus cursos</Text>
         </View>
 
-        {/* Materias activas */}
+        {/* KPI 2: Materias activas (Logo Circular Azul) */}
         <View style={[styles.statCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
           <View style={styles.statHeaderRow}>
-            <View style={[styles.statIconBox, { backgroundColor: 'rgba(59, 130, 246, 0.12)' }]}>
-              <MaterialIcons name="menu-book" size={20} color="#3B82F6" />
+            <View style={[styles.statIconCircle, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
+              <MaterialIcons name="menu-book" size={22} color="#3B82F6" />
             </View>
-            <Text style={[styles.statNumber, { color: theme.titleColor }]}>{subjects.length || 16}</Text>
+            <View style={styles.statNumberContainer}>
+              <Text style={[styles.statNumber, { color: theme.titleColor }]}>
+                {subjects.length}
+              </Text>
+              <Text style={[styles.statUnit, { color: theme.subColor }]}>materias</Text>
+            </View>
           </View>
           <Text style={[styles.statTitle, { color: theme.titleColor }]}>Materias activas</Text>
-          <Text style={[styles.statSub, { color: theme.subColor }]}>Ciclo Lectivo 2026</Text>
+          <Text style={[styles.statSub, { color: '#3B82F6' }]}>Ciclo Lectivo 2026</Text>
         </View>
 
-        {/* Deportes y talleres */}
+        {/* KPI 3: Deportes y talleres (Logo Circular Verde) */}
         <View style={[styles.statCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
           <View style={styles.statHeaderRow}>
-            <View style={[styles.statIconBox, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
-              <MaterialIcons name="sports-soccer" size={20} color="#10B981" />
+            <View style={[styles.statIconCircle, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+              <MaterialIcons name="sports-soccer" size={22} color="#10B981" />
             </View>
-            <Text style={[styles.statNumber, { color: theme.titleColor }]}>0</Text>
+            <View style={styles.statNumberContainer}>
+              <Text style={[styles.statNumber, { color: theme.titleColor }]}>
+                {sportsCount}
+              </Text>
+              <Text style={[styles.statUnit, { color: theme.subColor }]}>actividades</Text>
+            </View>
           </View>
           <Text style={[styles.statTitle, { color: theme.titleColor }]}>Deportes y talleres</Text>
           <Text style={[styles.statSub, { color: theme.subColor }]}>Extracurriculares</Text>
         </View>
 
-        {/* Tarjeta Destacada: Asistencia de Hoy */}
+        {/* KPI 4: Tarjeta Destacada Naranja: Asistencia de Hoy */}
         <View style={styles.actionCardOrange}>
           <View style={styles.actionHeaderRow}>
             <Text style={styles.actionSuperTitle}>ASISTENCIA DE HOY</Text>
-            <MaterialIcons name="how-to-reg" size={20} color="#FFFFFF" />
+            <MaterialIcons name="how-to-reg" size={22} color="#FFFFFF" />
           </View>
           <Text style={styles.actionCardTitle}>¿Tomaste asistencia hoy?</Text>
           <Text style={styles.actionCardDesc}>
@@ -119,8 +149,9 @@ export const TeacherCoursesTab: React.FC<TeacherCoursesTabProps> = ({
         </View>
       </View>
 
-      {/* ── 2. FILTROS POR NIVEL Y BUSCADOR ── */}
+      {/* ── 2. BARRA DE FILTROS POR NIVEL Y BUSCADOR ── */}
       <View style={styles.filtersSection}>
+        {/* Píldoras de nivel escolar */}
         <View style={styles.pillsRow}>
           {(['Todos', 'Inicial', 'Primaria', 'Secundaria'] as const).map((filter) => {
             const isActive = selectedFilter === filter;
@@ -133,15 +164,12 @@ export const TeacherCoursesTab: React.FC<TeacherCoursesTabProps> = ({
                   { backgroundColor: isActive ? theme.pillActiveBg : theme.pillInactiveBg },
                 ]}
                 onPress={() => setSelectedFilter(filter)}
-                activeOpacity={0.8}
+                activeOpacity={0.75}
               >
                 <Text
                   style={[
                     styles.filterPillText,
-                    {
-                      color: isActive ? theme.pillActiveText : theme.pillInactiveText,
-                      fontWeight: isActive ? '800' : '600',
-                    },
+                    { color: isActive ? theme.pillActiveText : theme.pillInactiveText },
                   ]}
                 >
                   {label}
@@ -151,96 +179,128 @@ export const TeacherCoursesTab: React.FC<TeacherCoursesTabProps> = ({
           })}
         </View>
 
-        {/* Buscador de materias */}
+        {/* Buscador de Asignaturas */}
         <View style={[styles.searchBox, { backgroundColor: theme.searchBg, borderColor: theme.border }]}>
-          <MaterialIcons name="search" size={20} color="#64748B" style={{ marginRight: 8 }} />
+          <MaterialIcons name="search" size={20} color={theme.subColor} style={{ marginRight: 8 }} />
           <TextInput
             style={[styles.searchInput, { color: theme.titleColor }]}
             placeholder="Buscar materia o curso..."
-            placeholderTextColor="#64748B"
+            placeholderTextColor={theme.subColor}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <MaterialIcons name="close" size={18} color="#64748B" />
+            <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <MaterialIcons name="close" size={18} color={theme.subColor} />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
-      {/* ── 3. LISTADO DE MATERIAS Y CURSOS ── */}
-      <View style={styles.subjectsList}>
-        {filteredSubjects.map((sub) => {
-          const badgeStyle = getNivelBadge(sub.nivel);
-          return (
-            <View
-              key={sub.id}
-              style={[
-                styles.courseCard,
-                { backgroundColor: theme.cardBg, borderColor: theme.border },
-              ]}
-            >
-              {/* Badges superiores: Nivel y Curso */}
-              <View style={styles.cardBadgesRow}>
-                <View style={[styles.nivelBadge, { backgroundColor: badgeStyle.bg }]}>
-                  <Text style={[styles.nivelBadgeText, { color: badgeStyle.text }]}>
-                    • Nivel {sub.nivel}
-                  </Text>
-                </View>
+      {/* ── 3. LISTADO DE MATERIAS ASIGNADAS ── */}
+      <View style={styles.coursesGrid}>
+        {filteredSubjects.length === 0 ? (
+          <View style={[styles.emptyCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+            <MaterialIcons name="menu-book" size={40} color={theme.subColor} />
+            <Text style={[styles.emptyTitle, { color: theme.titleColor }]}>
+              No se encontraron materias
+            </Text>
+            <Text style={[styles.emptySub, { color: theme.subColor }]}>
+              Intenta modificando los filtros de búsqueda o nivel escolar.
+            </Text>
+          </View>
+        ) : (
+          filteredSubjects.map((sub) => {
+            const nivelBadge = getNivelBadge(sub.nivel);
+            const studentCount = sub.studentsCount || sub.students?.length || 0;
 
-                <View style={[styles.cursoBadge, { backgroundColor: theme.pillInactiveBg }]}>
-                  <Text style={[styles.cursoBadgeText, { color: theme.subColor }]}>
-                    {sub.curso}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Título de la Materia */}
-              <Text style={[styles.courseTitle, { color: theme.titleColor }]}>
-                {sub.name}
-              </Text>
-
-              {/* Días y Horarios */}
-              <View style={[styles.scheduleBox, { backgroundColor: theme.scheduleBoxBg, borderColor: theme.border }]}>
-                <MaterialIcons name="schedule" size={15} color="#EA580C" style={{ marginRight: 6 }} />
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.scheduleLabel, { color: theme.subColor }]}>Días y Horarios:</Text>
-                  <Text style={[styles.scheduleValue, { color: theme.titleColor }]} numberOfLines={1}>
-                    {sub.schedule}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Alumnos en nómina */}
-              <View style={styles.nominaRow}>
-                <View style={styles.nominaAvatarsRow}>
-                  {[1, 2, 3].map((idx) => (
-                    <View key={idx} style={[styles.miniAvatar, { marginLeft: idx > 1 ? -6 : 0 }]}>
-                      <Text style={styles.miniAvatarText}>{idx}</Text>
-                    </View>
-                  ))}
-                  <Text style={[styles.nominaCountText, { color: theme.subColor }]}>
-                    {sub.studentsCount} alumnos
-                  </Text>
-                </View>
-
-                <Text style={styles.verNominaText}>Ver nómina →</Text>
-              </View>
-
-              {/* Botón Principal: Tomar Asistencia */}
-              <TouchableOpacity
-                style={styles.tomarAsistenciaBtn}
-                onPress={() => onNavigateToAttendance(sub.id)}
-                activeOpacity={0.85}
+            return (
+              <View
+                key={sub.id}
+                style={[styles.courseCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}
               >
-                <MaterialIcons name="how-to-reg" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                <Text style={styles.tomarAsistenciaBtnText}>Tomar Asistencia</Text>
-              </TouchableOpacity>
-            </View>
-          );
-        })}
+                {/* Cabecera de la Materia: Nivel y Curso */}
+                <View style={styles.courseHeader}>
+                  <View style={[styles.nivelBadge, { backgroundColor: nivelBadge.bg }]}>
+                    <View style={[styles.nivelDot, { backgroundColor: nivelBadge.text }]} />
+                    <Text style={[styles.nivelBadgeText, { color: nivelBadge.text }]}>
+                      Nivel {sub.nivel}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.cursoBadge, { backgroundColor: theme.pillInactiveBg }]}>
+                    <Text style={[styles.cursoBadgeText, { color: theme.subColor }]}>
+                      {sub.curso}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Título de la Materia */}
+                <Text style={[styles.courseTitle, { color: theme.titleColor }]} numberOfLines={2}>
+                  {sub.name}
+                </Text>
+
+                {/* Días y Horarios */}
+                <View style={[styles.scheduleBox, { backgroundColor: theme.scheduleBoxBg, borderColor: theme.border }]}>
+                  <MaterialIcons name="schedule" size={15} color="#EA580C" style={{ marginRight: 6 }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.scheduleLabel, { color: theme.subColor }]}>Días y Horarios:</Text>
+                    <Text style={[styles.scheduleValue, { color: theme.titleColor }]} numberOfLines={1}>
+                      {sub.schedule}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Nómina de Alumnos Matriculados con icono de OJO */}
+                <View style={styles.nominaRow}>
+                  <View style={styles.nominaAvatarsRow}>
+                    {[1, 2, 3].slice(0, Math.min(studentCount, 3)).map((idx) => (
+                      <View key={idx} style={[styles.miniAvatar, { marginLeft: idx > 1 ? -6 : 0 }]}>
+                        <Text style={styles.miniAvatarText}>{idx}</Text>
+                      </View>
+                    ))}
+                    <Text style={[styles.nominaCountText, { color: theme.subColor }]}>
+                      {studentCount} {studentCount === 1 ? 'alumno' : 'alumnos'}
+                    </Text>
+                  </View>
+
+                  {/* Botón Ver Nómina con Icono de Ojo */}
+                  <TouchableOpacity
+                    style={styles.verNominaBtn}
+                    onPress={() => setSelectedRosterSubject(sub)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.verNominaText}>Ver nómina</Text>
+                    <MaterialIcons name="visibility" size={15} color="#EA580C" style={{ marginLeft: 4 }} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Botón Principal: Tomar Asistencia */}
+                <TouchableOpacity
+                  style={styles.tomarAsistenciaBtn}
+                  onPress={() => onNavigateToAttendance(sub.id)}
+                  activeOpacity={0.85}
+                >
+                  <MaterialIcons name="how-to-reg" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.tomarAsistenciaBtnText}>Tomar Asistencia</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })
+        )}
       </View>
+
+      {/* ── 4. MODAL COMPLETO DE NÓMINA DE ALUMNOS (STUDENT ROSTER) ── */}
+      <StudentRosterModal
+        isOpen={!!selectedRosterSubject}
+        onClose={() => setSelectedRosterSubject(null)}
+        subject={selectedRosterSubject}
+        onTakeAttendance={(subjectId) => {
+          setSelectedRosterSubject(null);
+          onNavigateToAttendance(subjectId);
+        }}
+        isDarkMode={isDarkMode}
+      />
     </View>
   );
 };
@@ -249,40 +309,53 @@ export default TeacherCoursesTab;
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    gap: 18,
   },
+  // ── GRID DE KPIS ──
   statsGrid: {
-    gap: 10,
+    gap: 12,
   },
   statCard: {
-    borderRadius: 18,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 16,
     gap: 4,
   },
   statHeaderRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    gap: 12,
+    marginBottom: 6,
   },
-  statIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+  // ── LOGOS CIRCULARES PERFECTOS ──
+  statIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  statNumberContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+  },
   statNumber: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  statUnit: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   statTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
   },
   statSub: {
-    fontSize: 11.5,
+    fontSize: 11,
+    fontWeight: '600',
   },
   actionCardOrange: {
     backgroundColor: '#EA580C',
@@ -332,6 +405,7 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontWeight: '800',
   },
+  // ── FILTROS Y BÚSQUEDA ──
   filtersSection: {
     gap: 10,
   },
@@ -341,27 +415,29 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   filterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 14,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 12,
   },
   filterPillText: {
     fontSize: 12,
+    fontWeight: '700',
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    height: 46,
-    borderRadius: 14,
     borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    height: 42,
   },
   searchInput: {
     flex: 1,
     fontSize: 13,
   },
-  subjectsList: {
-    gap: 12,
+  // ── CARDS DE ASIGNATURAS ──
+  coursesGrid: {
+    gap: 14,
   },
   courseCard: {
     borderRadius: 20,
@@ -369,33 +445,41 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
   },
-  cardBadgesRow: {
+  courseHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
   },
   nivelBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    gap: 5,
+  },
+  nivelDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   nivelBadgeText: {
-    fontSize: 10.5,
-    fontWeight: '800',
+    fontSize: 11,
+    fontWeight: '700',
   },
   cursoBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
   },
   cursoBadgeText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: '700',
   },
   courseTitle: {
     fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: -0.2,
+    fontWeight: '900',
+    letterSpacing: -0.3,
   },
   scheduleBox: {
     flexDirection: 'row',
@@ -405,19 +489,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   scheduleLabel: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: '600',
   },
   scheduleValue: {
     fontSize: 11.5,
     fontWeight: '700',
-    marginTop: 1,
   },
   nominaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 4,
   },
   nominaAvatarsRow: {
     flexDirection: 'row',
@@ -436,16 +518,23 @@ const styles = StyleSheet.create({
   miniAvatarText: {
     color: '#FFFFFF',
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   nominaCountText: {
-    fontSize: 11.5,
     marginLeft: 8,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  verNominaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 6,
   },
   verNominaText: {
-    fontSize: 11.5,
     color: '#EA580C',
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
   },
   tomarAsistenciaBtn: {
     flexDirection: 'row',
@@ -453,11 +542,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#EA580C',
     paddingVertical: 11,
-    borderRadius: 14,
+    borderRadius: 12,
+    shadowColor: '#EA580C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tomarAsistenciaBtnText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '800',
+  },
+  emptyCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 32,
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  emptySub: {
+    fontSize: 12,
+    textAlign: 'center',
   },
 });

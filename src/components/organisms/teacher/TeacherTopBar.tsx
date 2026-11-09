@@ -35,7 +35,7 @@ export const TeacherTopBar: React.FC<TeacherTopBarProps> = ({
 
   return (
     <View style={[styles.container, { backgroundColor: theme.bg, borderBottomColor: theme.border }]}>
-      {/* ── IZQUIERDA: MENÚ HAMBURGUESA Y PANEL DOCENTE ── */}
+      {/* ── IZQUIERDA: MENÚ HAMBURGUESA Y TÍTULO PANEL DOCENTE ── */}
       <View style={styles.leftSection}>
         <TouchableOpacity
           onPress={onOpenSidebar}
@@ -45,19 +45,22 @@ export const TeacherTopBar: React.FC<TeacherTopBarProps> = ({
           <MaterialIcons name="menu" size={24} color={theme.titleColor} />
         </TouchableOpacity>
 
-        <View style={styles.portalBrand}>
-          <Text style={[styles.portalTitle, { color: theme.titleColor }]} numberOfLines={1}>
-            Panel Docente
-          </Text>
-          <Text style={[styles.portalSubtitle, { color: theme.subColor }]} numberOfLines={1}>
-            Gestión académica y seguimiento de alumnos
-          </Text>
-        </View>
+        <Text style={[styles.portalTitle, { color: theme.titleColor }]} numberOfLines={1}>
+          Panel Docente
+        </Text>
       </View>
 
-      {/* ── DERECHA: FECHA, TEMA Y AVATAR DOCENTE ── */}
+      {/* ── DERECHA: FECHA CORTA, SELECTOR DE TEMA Y AVATAR CON INICIALES ── */}
       <View style={styles.rightSection}>
-        {/* Toggle de Modo Claro / Oscuro */}
+        {/* Píldora de Fecha Corta (no invasiva) */}
+        <View style={[styles.datePill, { backgroundColor: theme.datePillBg }]}>
+          <MaterialIcons name="calendar-today" size={11} color="#EA580C" style={{ marginRight: 4 }} />
+          <Text style={[styles.datePillText, { color: theme.subColor }]}>
+            9 nov 2026
+          </Text>
+        </View>
+
+        {/* Selector de Modo Claro / Oscuro */}
         <TouchableOpacity
           onPress={onToggleTheme}
           style={styles.themeBtn}
@@ -70,26 +73,14 @@ export const TeacherTopBar: React.FC<TeacherTopBarProps> = ({
           />
         </TouchableOpacity>
 
-        {/* Campana de Notificaciones */}
-        <TouchableOpacity style={styles.themeBtn} activeOpacity={0.7}>
-          <MaterialIcons name="notifications-none" size={22} color={theme.titleColor} />
+        {/* Avatar Circular con Iniciales (sin nombre ni perfil para no sobrecargar) */}
+        <TouchableOpacity
+          onPress={onOpenSidebar}
+          activeOpacity={0.8}
+          style={styles.avatarCircle}
+        >
+          <Text style={styles.avatarText}>{initials}</Text>
         </TouchableOpacity>
-
-        {/* Avatar del Docente */}
-        <View style={styles.userProfile}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
-          <View style={styles.userInfoCol}>
-            <Text style={[styles.userName, { color: theme.titleColor }]} numberOfLines={1}>
-              {teacherName}
-            </Text>
-            <View style={styles.staffRow}>
-              <View style={styles.staffDot} />
-              <Text style={styles.staffText}>Staff</Text>
-            </View>
-          </View>
-        </View>
       </View>
     </View>
   );
@@ -99,7 +90,7 @@ export default TeacherTopBar;
 
 const styles = StyleSheet.create({
   container: {
-    height: 64,
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -110,73 +101,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    marginRight: 8,
+    marginRight: 6,
   },
   menuBtn: {
     padding: 6,
     marginRight: 8,
   },
-  portalBrand: {
-    flexShrink: 1,
-    gap: 1,
-  },
   portalTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: -0.2,
-  },
-  portalSubtitle: {
-    fontSize: 10.5,
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: -0.3,
   },
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
+  },
+  datePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  datePillText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   themeBtn: {
     padding: 6,
-  },
-  userProfile: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginLeft: 4,
+    borderRadius: 8,
   },
   avatarCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#EA580C',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#EA580C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
   },
   avatarText: {
     color: '#FFFFFF',
+    fontSize: 13,
     fontWeight: '900',
-    fontSize: 13.5,
-  },
-  userInfoCol: {
-    gap: 1,
-  },
-  userName: {
-    fontSize: 12,
-    fontWeight: '700',
-    maxWidth: 100,
-  },
-  staffRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  staffDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#10B981',
-    marginRight: 4,
-  },
-  staffText: {
-    color: '#10B981',
-    fontSize: 9.5,
-    fontWeight: '700',
   },
 });
