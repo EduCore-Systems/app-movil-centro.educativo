@@ -139,6 +139,7 @@ export const TeacherPanel: React.FC<TeacherPanelProps> = ({
                 subjects={subjects}
                 selectedSubjectId={selectedSubjectId}
                 isDarkMode={isDarkMode}
+                user={user}
               />
             )}
 

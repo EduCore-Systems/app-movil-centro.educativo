@@ -14,33 +14,39 @@ import {
   TeacherCourseSubject,
   TeacherStudentItem,
   AttendanceStatus,
+  FullAttendanceStatus,
   AttendanceRecord,
   saveTeacherAttendance,
+  getTeacherAttendance,
 } from '../../../services/teacherService';
 
 interface TeacherAttendanceTabProps {
   subjects: TeacherCourseSubject[];
   selectedSubjectId?: string;
   isDarkMode?: boolean;
+  user?: any;
 }
 
 export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = ({
   subjects,
   selectedSubjectId,
   isDarkMode = true,
+  user,
 }) => {
   const [currentSubjectId, setCurrentSubjectId] = useState<string>(
     selectedSubjectId || subjects[0]?.id || 'sub-his-1'
   );
   const [selectorModalVisible, setSelectorModalVisible] = useState(false);
-  const [classDate, setClassDate] = useState('09/11/2026');
+  const [selectedDateISO, setSelectedDateISO] = useState('2026-11-09');
+  const classDate = '09/11/2026';
 
   // Asistencia por alumno: { [studentId]: 'P' | 'T' | 'AJ' | 'AI' | null }
   const [attendanceMap, setAttendanceMap] = useState<Record<string, AttendanceStatus | null>>({});
   // Observaciones por alumno: { [studentId]: string }
   const [observationsMap, setObservationsMap] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isAlreadySaved, setIsAlreadySaved] = useState(false);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(false);
 
   // Materia activa actual
   const currentSubject = subjects.find(s => s.id === currentSubjectId) || subjects[0];
@@ -53,12 +59,52 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = ({
     }
   }, [selectedSubjectId]);
 
-  // Reset de estados al cambiar de curso
+  // Cargar asistencia registrada desde Firestore (bidireccional con web)
   useEffect(() => {
-    setAttendanceMap({});
-    setObservationsMap({});
-    setSaveSuccess(false);
-  }, [currentSubjectId]);
+    let isMounted = true;
+    const fetchExisting = async () => {
+      if (!currentSubject?.id) return;
+      setIsLoadingExisting(true);
+      try {
+        const existing = await getTeacherAttendance(currentSubject.id, selectedDateISO);
+        if (!isMounted) return;
+
+        if (existing && existing.records && existing.records.length > 0) {
+          const map: Record<string, AttendanceStatus | null> = {};
+          const obs: Record<string, string> = {};
+
+          existing.records.forEach((r: any) => {
+            let shortStatus: AttendanceStatus = 'P';
+            if (r.status === 'presente' || r.status === 'P') shortStatus = 'P';
+            else if (r.status === 'tarde' || r.status === 'T') shortStatus = 'T';
+            else if (r.status === 'ausente_justificado' || r.status === 'AJ') shortStatus = 'AJ';
+            else if (r.status === 'ausente_injustificado' || r.status === 'AI') shortStatus = 'AI';
+
+            map[r.studentId] = shortStatus;
+            obs[r.studentId] = r.note || r.observation || '';
+          });
+
+          setAttendanceMap(map);
+          setObservationsMap(obs);
+          setIsAlreadySaved(true);
+        } else {
+          setAttendanceMap({});
+          setObservationsMap({});
+          setIsAlreadySaved(false);
+        }
+      } catch (err) {
+        console.warn('Error al cargar asistencias existentes de Firestore:', err);
+      } finally {
+        if (isMounted) setIsLoadingExisting(false);
+      }
+    };
+
+    fetchExisting();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentSubject?.id, selectedDateISO]);
 
   // Contar cuántos están marcados
   const markedCount = students.filter(st => attendanceMap[st.id] !== undefined && attendanceMap[st.id] !== null).length;
@@ -78,7 +124,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = ({
   // Acción: Desmarcar todos
   const handleResetAll = () => {
     setAttendanceMap({});
-    setSaveSuccess(false);
+    setIsAlreadySaved(false);
   };
 
   // Acción: Marcar estado de un alumno
@@ -97,7 +143,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = ({
     }));
   };
 
-  // Guardar asistencia del día
+  // Guardar asistencia del día sincronizada con la web
   const handleSaveAttendance = async () => {
     if (!isAllMarked) {
       Alert.alert(
@@ -108,22 +154,41 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = ({
     }
 
     setIsSaving(true);
-    const records: AttendanceRecord[] = students.map(st => ({
-      studentId: st.id,
-      studentName: st.name,
-      legajo: st.legajo,
-      status: attendanceMap[st.id] || 'P',
-      observation: observationsMap[st.id] || '',
-    }));
+    const recordsPayload = students.map(st => {
+      const shortStatus = attendanceMap[st.id] || 'P';
+      let fullStatus: FullAttendanceStatus = 'presente';
+      if (shortStatus === 'T') fullStatus = 'tarde';
+      else if (shortStatus === 'AJ') fullStatus = 'ausente_justificado';
+      else if (shortStatus === 'AI') fullStatus = 'ausente_injustificado';
 
-    const ok = await saveTeacherAttendance(currentSubject.id, classDate, records);
+      return {
+        studentId: st.id,
+        studentName: st.name || st.nombre || 'Alumno',
+        studentDni: st.dni || '',
+        studentLegajo: st.legajo || st.studentID_login || st.id,
+        status: fullStatus,
+        note: observationsMap[st.id] || '',
+      };
+    });
+
+    const ok = await saveTeacherAttendance({
+      subjectId: currentSubject.id,
+      subjectName: currentSubject.name,
+      courseId: currentSubject.curso || '',
+      courseName: currentSubject.courseName || `${currentSubject.curso} (${currentSubject.nivel})`,
+      teacherId: user?.teacherId || user?.uid || 'teacher-fontana',
+      teacherName: user?.nombre || 'Prof. Federico Fontana',
+      date: selectedDateISO,
+      records: recordsPayload,
+    });
+
     setIsSaving(false);
 
     if (ok) {
-      setSaveSuccess(true);
+      setIsAlreadySaved(true);
       Alert.alert(
-        '¡Asistencia Guardada!',
-        `Se registró la asistencia de ${totalStudents} alumnos para ${currentSubject.name} correspondiente al ${classDate}.`,
+        '¡Asistencia Guardada con Éxito!',
+        `Se ha sincronizado la asistencia de ${totalStudents} alumnos para la materia ${currentSubject.name} correspondiente al ${classDate}.`,
         [{ text: 'Aceptar' }]
       );
     }
@@ -180,7 +245,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = ({
             onPress={handleMarkAllPresent}
             activeOpacity={0.8}
           >
-            <MaterialIcons name="check" size={18} color="#FFFFFF" />
+            <MaterialIcons name="done-all" size={17} color="#10B981" />
             <Text style={styles.markAllButtonText}>Todos Presentes</Text>
           </TouchableOpacity>
 
@@ -194,6 +259,21 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = ({
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* ── BANNER DE ASISTENCIA REGISTRADA / SINCRONIZADA CON LA WEB ── */}
+      {isAlreadySaved && (
+        <View style={[styles.syncedBanner, { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.12)' : '#ECFDF5', borderColor: 'rgba(16, 185, 129, 0.35)' }]}>
+          <View style={styles.syncedBannerLeft}>
+            <MaterialIcons name="check-circle" size={18} color="#10B981" />
+            <Text style={[styles.syncedBannerText, { color: isDarkMode ? '#A7F3D0' : '#065F46' }]}>
+              Planilla registrada para esta fecha. Puedes modificar el estado de los alumnos y volver a guardar para actualizar el cómputo.
+            </Text>
+          </View>
+          <View style={styles.syncedBadge}>
+            <Text style={styles.syncedBadgeText}>Sincronizado</Text>
+          </View>
+        </View>
+      )}
 
       {/* ── ENCABEZADO DE LA ASIGNATURA ACTUAL ── */}
       <View style={styles.subjectHeader}>
@@ -589,14 +669,16 @@ const styles = StyleSheet.create({
   markAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10B981',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.45)',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
     gap: 8,
   },
   markAllButtonText: {
-    color: '#FFFFFF',
+    color: '#10B981',
     fontSize: 13,
     fontWeight: '700',
   },
@@ -612,6 +694,40 @@ const styles = StyleSheet.create({
   resetButtonText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  // ── BANNER SINCRONIZADO ──
+  syncedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 16,
+    gap: 12,
+  },
+  syncedBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  syncedBannerText: {
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1,
+    lineHeight: 16,
+  },
+  syncedBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  syncedBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#10B981',
   },
   // ── ENCABEZADO DE ASIGNATURA ──
   subjectHeader: {

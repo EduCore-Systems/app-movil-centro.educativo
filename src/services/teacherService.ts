@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
 export interface TeacherStudentItem {
@@ -51,6 +51,7 @@ export interface TeacherProfileData {
 }
 
 export type AttendanceStatus = 'P' | 'T' | 'AJ' | 'AI';
+export type FullAttendanceStatus = 'presente' | 'tarde' | 'ausente_justificado' | 'ausente_injustificado';
 
 export interface AttendanceRecord {
   studentId: string;
@@ -58,6 +59,26 @@ export interface AttendanceRecord {
   legajo: string;
   status: AttendanceStatus;
   observation?: string;
+}
+
+export interface AttendanceRecordPayload {
+  studentId: string;
+  studentName: string;
+  studentDni?: string;
+  studentLegajo?: string;
+  status: FullAttendanceStatus;
+  note?: string;
+}
+
+export interface SaveTeacherAttendanceParams {
+  subjectId: string;
+  subjectName?: string;
+  courseId?: string;
+  courseName?: string;
+  teacherId?: string;
+  teacherName?: string;
+  date: string; // Formato YYYY-MM-DD
+  records: AttendanceRecordPayload[];
 }
 
 export const DEFAULT_TEACHER: TeacherProfileData = {
@@ -562,28 +583,115 @@ export const getTeacherSubjects = async (user?: any): Promise<TeacherCourseSubje
 };
 
 /**
- * Guarda el registro de asistencia del docente
+ * Obtiene la asistencia registrada para una materia y fecha específica (YYYY-MM-DD o DD-MM-YYYY)
+ */
+export const getTeacherAttendance = async (
+  subjectId: string,
+  dateStr: string
+): Promise<any | null> => {
+  if (!subjectId || !dateStr) return null;
+  const cleanDate = dateStr.replace(/\//g, '-');
+  const docId = `${subjectId}_${cleanDate}`;
+  try {
+    // 1. Intentar leer de 'attendance' (web oficial de EduCore)
+    const docRef = doc(db, 'attendance', docId);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      return { id: snap.id, ...snap.data() };
+    }
+
+    // 2. Fallback: intentar leer de 'asistencias' (móvil)
+    const mobileDocRef = doc(db, 'asistencias', docId);
+    const mobileSnap = await getDoc(mobileDocRef);
+    if (mobileSnap.exists()) {
+      return { id: mobileSnap.id, ...mobileSnap.data() };
+    }
+
+    return null;
+  } catch (err) {
+    console.warn('Error al consultar asistencia desde Firestore:', err);
+    return null;
+  }
+};
+
+/**
+ * Guarda el registro de asistencia del docente sincronizando con Firestore (attendance y asistencias)
  */
 export const saveTeacherAttendance = async (
-  subjectId: string,
-  dateStr: string,
-  records: AttendanceRecord[]
+  paramsOrSubjectId: SaveTeacherAttendanceParams | string,
+  legacyDateStr?: string,
+  legacyRecords?: AttendanceRecord[]
 ): Promise<boolean> => {
   try {
-    const docId = `${subjectId}_${dateStr.replace(/\//g, '-')}`;
-    await setDoc(
-      doc(db, 'asistencias', docId),
-      {
-        subjectId,
-        date: dateStr,
-        records,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+    let subjectId: string;
+    let dateStr: string;
+    let records: AttendanceRecordPayload[];
+    let subjectName = 'Materia General';
+    let courseId = '';
+    let courseName = 'Curso General';
+    let teacherId = '';
+    let teacherName = 'Docente';
+
+    if (typeof paramsOrSubjectId === 'object') {
+      subjectId = paramsOrSubjectId.subjectId;
+      dateStr = paramsOrSubjectId.date;
+      records = paramsOrSubjectId.records;
+      subjectName = paramsOrSubjectId.subjectName || subjectName;
+      courseId = paramsOrSubjectId.courseId || courseId;
+      courseName = paramsOrSubjectId.courseName || courseName;
+      teacherId = paramsOrSubjectId.teacherId || teacherId;
+      teacherName = paramsOrSubjectId.teacherName || teacherName;
+    } else {
+      subjectId = paramsOrSubjectId;
+      dateStr = legacyDateStr || new Date().toISOString().split('T')[0];
+      records = (legacyRecords || []).map(r => {
+        let fullStatus: FullAttendanceStatus = 'presente';
+        if (r.status === 'T') fullStatus = 'tarde';
+        else if (r.status === 'AJ') fullStatus = 'ausente_justificado';
+        else if (r.status === 'AI') fullStatus = 'ausente_injustificado';
+        return {
+          studentId: r.studentId,
+          studentName: r.studentName,
+          studentLegajo: r.legajo,
+          status: fullStatus,
+          note: r.observation || '',
+        };
+      });
+    }
+
+    const cleanDate = dateStr.replace(/\//g, '-');
+    const docId = `${subjectId}_${cleanDate}`;
+
+    const stats = {
+      total: records.length,
+      present: records.filter(r => r.status === 'presente').length,
+      late: records.filter(r => r.status === 'tarde').length,
+      justifiedAbsent: records.filter(r => r.status === 'ausente_justificado').length,
+      unjustifiedAbsent: records.filter(r => r.status === 'ausente_injustificado').length,
+    };
+
+    const attendanceData = {
+      subjectId,
+      subjectName,
+      courseId,
+      courseName,
+      teacherId,
+      teacherName,
+      date: cleanDate,
+      records,
+      stats,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Sincronizar en ambas colecciones: 'attendance' (web) y 'asistencias' (móvil)
+    await Promise.all([
+      setDoc(doc(db, 'attendance', docId), attendanceData, { merge: true }),
+      setDoc(doc(db, 'asistencias', docId), attendanceData, { merge: true }),
+    ]);
+
     return true;
   } catch (e) {
-    console.warn('Guardado local de asistencia:', e);
+    console.warn('Error al guardar asistencia en Firestore:', e);
     return true;
   }
 };
