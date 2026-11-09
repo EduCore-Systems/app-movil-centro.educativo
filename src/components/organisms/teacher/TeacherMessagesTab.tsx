@@ -474,8 +474,8 @@ export const TeacherMessagesTab: React.FC<TeacherMessagesTabProps> = ({
             </View>
 
             <View style={[styles.institutionalBadge, { backgroundColor: isDarkMode ? '#1E293B' : '#E2E8F0' }]}>
-              <MaterialIcons name="verified" size={14} color="#10B981" />
-              <Text style={[styles.institutionalBadgeText, { color: theme.subColor }]}>Oficial</Text>
+              <MaterialIcons name="verified" size={14} color={theme.subColor} />
+              <Text style={[styles.institutionalBadgeText, { color: theme.subColor }]}>Canal Institucional</Text>
             </View>
           </View>
 

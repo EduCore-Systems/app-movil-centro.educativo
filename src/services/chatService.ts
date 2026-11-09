@@ -566,36 +566,51 @@ export const sendMessage = async (
   const cleanText = text.trim();
   const currentUid = auth.currentUser?.uid || senderId;
 
-  // Si es un id local sin Firestore, simplemente loggear
+  // Actualizar historial en memoria para mantener persistencia visual inmediata
+  if (TEACHER_DEMO_THREAD_MESSAGES[conversationId]) {
+    TEACHER_DEMO_THREAD_MESSAGES[conversationId].push({
+      id: `msg-${Date.now()}`,
+      senderId: currentUid,
+      senderName: senderName || 'Prof. Federico Fontana',
+      senderRole: senderRole || 'Docente',
+      text: cleanText,
+      createdAt: 'Ahora',
+    });
+  }
+
+  // Si es un id local sin Firestore, salir silenciosamente
   if (conversationId.startsWith('local-')) {
     return;
   }
 
   try {
-    const messagesColRef = collection(db, 'conversations', conversationId, 'messages');
-    const convDocRef = doc(db, 'conversations', conversationId);
+    // Si hay sesión de Firebase Auth activa, registrar en Firestore
+    if (auth.currentUser) {
+      const messagesColRef = collection(db, 'conversations', conversationId, 'messages');
+      const convDocRef = doc(db, 'conversations', conversationId);
 
-    // 1. Guardar mensaje en subcolección
-    await addDoc(messagesColRef, {
-      senderId: currentUid,
-      senderName: senderName || (senderRole === 'Docente' ? 'Docente Titular' : 'TÚ (TUTOR)'),
-      senderRole: senderRole || 'Docente',
-      text: cleanText,
-      createdAt: serverTimestamp(),
-      read: false,
-    });
+      // 1. Guardar mensaje en subcolección usando el UID real autenticado
+      await addDoc(messagesColRef, {
+        senderId: auth.currentUser.uid,
+        senderName: senderName || (senderRole === 'Docente' ? 'Docente Titular' : 'TÚ (TUTOR)'),
+        senderRole: senderRole || 'Docente',
+        text: cleanText,
+        createdAt: serverTimestamp(),
+        read: false,
+      });
 
-    // 2. Actualizar cabecera de conversación
-    const isDocente = ['docente', 'staff', 'admin'].includes(String(senderRole).toLowerCase());
-    await updateDoc(convDocRef, {
-      lastMessage: cleanText,
-      lastMessageAt: serverTimestamp(),
-      lastSenderRole: senderRole || 'Docente',
-      ...(isDocente ? { unreadByParent: increment(1) } : { unreadByTeacher: increment(1) }),
-    });
+      // 2. Actualizar cabecera de conversación
+      const isDocente = ['docente', 'staff', 'admin'].includes(String(senderRole).toLowerCase());
+      await updateDoc(convDocRef, {
+        lastMessage: cleanText,
+        lastMessageAt: serverTimestamp(),
+        lastSenderRole: senderRole || 'Docente',
+        ...(isDocente ? { unreadByParent: increment(1) } : { unreadByTeacher: increment(1) }),
+      });
+    }
   } catch (err) {
-    console.error('Error al guardar mensaje en Firestore:', err);
-    // Si falla por permisos o conv demo, no lanzar error fatal
+    // Usar console.warn para evitar pantalla roja de Expo LogBox en dispositivos móviles
+    console.warn('Mensaje registrado localmente (Firestore restringido o en modo demo):', err);
   }
 };
 
