@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet, Linking, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface AdminSidebarProps {
@@ -162,7 +162,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           </ScrollView>
 
           <View style={[styles.sidebarFooter, { borderTopColor: theme.divider }]}>
-            <TouchableOpacity style={styles.sidebarMenuItem} onPress={onClose}>
+            <TouchableOpacity style={styles.sidebarMenuItem} onPress={() => { onClose(); Linking.openURL('https://educore-systems-web.vercel.app').catch(() => Alert.alert('Error', 'No se pudo abrir el sitio institucional.')); }}>
               <MaterialIcons name="home" size={20} color={theme.textSecondary} style={{ marginRight: 12 }} />
               <Text style={[styles.sidebarMenuText, { color: theme.textSecondary }]}>Sitio Institucional</Text>
             </TouchableOpacity>
