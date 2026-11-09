@@ -15,6 +15,7 @@ import StudentNavTabs, { StudentTab } from '../../molecules/student/StudentNavTa
 import StudentProfileTab from './StudentProfileTab';
 import StudentSubjectsTab from './StudentSubjectsTab';
 import StudentScheduleTab from './StudentScheduleTab';
+import StudentServicesTab from './StudentServicesTab';
 import FamilyDocumentModal from '../family/FamilyDocumentModal';
 import AttendanceHistoryModal from '../../molecules/family/AttendanceHistoryModal';
 import { getStudentAttendanceHistory, AttendanceRecord } from '../../../services/attendanceService';
@@ -31,7 +32,7 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
   onToggleTheme,
 }) => {
   const { user, logout } = useAuth();
-  const [student, setStudent] = useState<StudentProfileData>(DEFAULT_MATEO_ROSSI);
+  const [student, setStudent] = useState<StudentProfileData>(DEFAULTMATEO_ROSSI_RESOLVE(user));
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StudentTab>('ficha');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -46,6 +47,15 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
   const [totalClasses, setTotalClasses] = useState(25);
 
   const mainScrollRef = useRef<any>(null);
+
+  function DEFAULTMATEO_ROSSI_RESOLVE(u: any): StudentProfileData {
+    return {
+      ...DEFAULT_MATEO_ROSSI,
+      nombre: u?.nombre || DEFAULT_MATEO_ROSSI.nombre,
+      studentID_login: u?.studentID_login || u?.legajo || DEFAULT_MATEO_ROSSI.studentID_login,
+      dni: u?.dni || DEFAULT_MATEO_ROSSI.dni,
+    };
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -170,21 +180,17 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
               <StudentSubjectsTab isDarkMode={isDarkMode} />
             )}
 
-            {/* PESTAÑA 3: Horario Semanal (Fase 3) */}
+            {/* PESTAÑA 3: Horario Semanal */}
             {activeTab === 'horario' && (
               <StudentScheduleTab isDarkMode={isDarkMode} />
             )}
 
             {/* PESTAÑA 4: Servicios y Talleres (Fase 4) */}
             {activeTab === 'servicios' && (
-              <View style={[styles.placeholderCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-                <Text style={[styles.placeholderTitle, { color: theme.titleColor }]}>
-                  Servicios y Talleres
-                </Text>
-                <Text style={[styles.placeholderSub, { color: theme.subColor }]}>
-                  Fase 4: Deportes extracurriculares con cupo 2/2 y logística escolar.
-                </Text>
-              </View>
+              <StudentServicesTab
+                student={student}
+                isDarkMode={isDarkMode}
+              />
             )}
           </>
         )}
