@@ -12,6 +12,7 @@ import TeacherSidebar from './TeacherSidebar';
 import TeacherNavTabs, { TeacherTab } from '../../molecules/teacher/TeacherNavTabs';
 import TeacherCoursesTab from './TeacherCoursesTab';
 import { TeacherAttendanceTab } from './TeacherAttendanceTab';
+import { TeacherMessagesTab } from './TeacherMessagesTab';
 import {
   TeacherCourseSubject,
   TeacherProfileData,
@@ -145,14 +146,11 @@ export const TeacherPanel: React.FC<TeacherPanelProps> = ({
 
             {/* PESTAÑA 3: Mensajes con Familias (Fase 3) */}
             {activeTab === 'mensajes' && (
-              <View style={[styles.placeholderCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-                <Text style={[styles.placeholderTitle, { color: theme.titleColor }]}>
-                  Mensajes con Familias
-                </Text>
-                <Text style={[styles.placeholderSub, { color: theme.subColor }]}>
-                  Fase 3: Canal oficial de tutoría y diálogo pedagógico con familias en tiempo real.
-                </Text>
-              </View>
+              <TeacherMessagesTab
+                user={user}
+                subjects={subjects}
+                isDarkMode={isDarkMode}
+              />
             )}
 
             {/* PESTAÑA 4: Mi Cronograma Semanal (Fase 4) */}
