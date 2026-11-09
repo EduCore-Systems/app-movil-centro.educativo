@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
@@ -18,7 +17,8 @@ import LinkStudentModal from '../../molecules/family/LinkStudentModal';
 import StudentProfileTab from './StudentProfileTab';
 import StudentSubjectsTab from './StudentSubjectsTab';
 import StudentServicesTab from './StudentServicesTab';
-import EmptyState from '../../molecules/EmptyState';
+import FamilyChatTab from './FamilyChatTab';
+import FamilyDocumentModal from './FamilyDocumentModal';
 import { getChildrenForParent, FamilyStudent } from '../../../services/familyService';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -40,6 +40,12 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
   const [activeTab, setActiveTab] = useState<FamilyTab>('resumen');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+
+  // Estado para el Visor Formal de Documentos Oficiales (Boletín / Certificado Regular)
+  const [docModal, setDocModal] = useState<{ isOpen: boolean; type: 'boletin' | 'certificado' }>({
+    isOpen: false,
+    type: 'boletin',
+  });
 
   // Referencias para auto-scroll suave
   const mainScrollRef = useRef<any>(null);
@@ -135,11 +141,11 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
             </Text>
           </View>
 
-          {/* Botones de Documentación Rápida */}
+          {/* Botones de Documentación Rápida con Apertura Real */}
           <View style={styles.docButtonsRow}>
             <TouchableOpacity
               style={[styles.docBtnOutline, { borderColor: theme.border, backgroundColor: theme.cardBg }]}
-              onPress={() => Alert.alert('Boletín Actual', 'El visor de boletín oficial estará disponible en la Fase 3.')}
+              onPress={() => setDocModal({ isOpen: true, type: 'boletin' })}
               activeOpacity={0.8}
             >
               <MaterialIcons name="download" size={16} color={theme.subColor} style={{ marginRight: 6 }} />
@@ -148,7 +154,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
 
             <TouchableOpacity
               style={styles.docBtnFilled}
-              onPress={() => Alert.alert('Certificado Regular', 'El certificado de alumno regular estará disponible en la Fase 3.')}
+              onPress={() => setDocModal({ isOpen: true, type: 'certificado' })}
               activeOpacity={0.8}
             >
               <MaterialIcons name="verified" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
@@ -252,12 +258,12 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
               />
             )}
 
-            {/* 4. Consultas con Docentes (Fase 3) */}
+            {/* 4. Consultas con Docentes (Fase 3 - Activa) */}
             {activeTab === 'chat' && (
-              <EmptyState
-                icon="chat"
-                title="Consultas con Docentes (Fase 3)"
-                subtitle="El canal de mensajería directa con los docentes a cargo se integrará en el siguiente paso."
+              <FamilyChatTab
+                student={selectedStudent}
+                user={user}
+                onBackToDashboard={() => handleSelectTab('resumen')}
                 isDarkMode={isDarkMode}
               />
             )}
@@ -274,7 +280,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
         onLogout={logout}
         tutorName={tutorName}
         childrenCount={children.length}
-        onOpenDocument={(type) => Alert.alert('Documento Oficial', `Visor de ${type} en Fase 3.`)}
+        onOpenDocument={(type) => setDocModal({ isOpen: true, type })}
         onSwitchToAdmin={onSwitchToAdmin}
         isDarkMode={isDarkMode}
       />
@@ -286,6 +292,14 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
         parentId={user?.uid || 'parent-demo'}
         onStudentLinked={handleStudentLinked}
         isDarkMode={isDarkMode}
+      />
+
+      {/* ── MODAL VISOR FORMAL DE DOCUMENTOS (BOLETÍN / CERTIFICADO REGULAR) ── */}
+      <FamilyDocumentModal
+        isOpen={docModal.isOpen}
+        onClose={() => setDocModal((prev) => ({ ...prev, isOpen: false }))}
+        type={docModal.type}
+        student={selectedStudent}
       />
     </SafeAreaView>
   );
@@ -302,7 +316,7 @@ const styles = StyleSheet.create({
   },
   scrollContentContainer: {
     padding: 16,
-    paddingBottom: 100, // Margen inferior amplio para que ningún botón quede cortado a media pantalla
+    paddingBottom: 100,
   },
   headerBanner: {
     marginBottom: 20,
