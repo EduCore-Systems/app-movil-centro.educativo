@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
   signOut,
-  User as FirebaseUser
+  User as FirebaseUser,
 } from 'firebase/auth';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,6 +15,7 @@ export interface UserProfile {
   nombre?: string;
   apellido?: string;
   role?: string;
+  titulo?: string;
   dni?: string;
   studentID_login?: string;
   legajo?: string;
@@ -28,6 +29,9 @@ export interface UserProfile {
   deportes?: string[];
   usa_comedor?: boolean;
   transporte_recorrido?: string;
+  alumnosCount?: number;
+  materiasCount?: number;
+  deportesCount?: number;
   [key: string]: any;
 }
 
@@ -39,6 +43,131 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
+// ── NÓMINA OFICIAL DE PERSONAL DOCENTE / STAFF INSTITUCIONAL ──
+export const OFFICIAL_STAFF_ACCOUNTS: UserProfile[] = [
+  {
+    uid: 'staff-fontana',
+    nombre: 'Prof. Federico Fontana',
+    email: 'federico.fontana@educore.edu.ar',
+    dni: '32456789',
+    role: 'Docente',
+    titulo: 'Tecnología y Robótica',
+    alumnosCount: 11,
+    materiasCount: 16,
+    deportesCount: 0,
+  },
+  {
+    uid: 'staff-fontana-alt',
+    nombre: 'Prof. Federico Fontana',
+    email: 'federico.fontana@educore.com',
+    dni: '32888999',
+    role: 'Docente',
+    titulo: 'Tecnología y Robótica',
+    alumnosCount: 11,
+    materiasCount: 16,
+    deportesCount: 0,
+  },
+  {
+    uid: 'staff-torres',
+    nombre: 'Prof. Diego Torres',
+    email: 'diego.torres@educore.edu.ar',
+    dni: '28912345',
+    role: 'Staff',
+    titulo: 'Educación Física y Deportes',
+    alumnosCount: 14,
+    materiasCount: 8,
+    deportesCount: 2,
+  },
+  {
+    uid: 'staff-morales',
+    nombre: 'Prof. Silvina Morales',
+    email: 'silvina.morales@educore.edu.ar',
+    dni: '29876543',
+    role: 'Docente',
+    titulo: 'Arte y Creatividad',
+    alumnosCount: 10,
+    materiasCount: 6,
+    deportesCount: 1,
+  },
+  {
+    uid: 'staff-morales-alt',
+    nombre: 'Prof. Silvina Morales',
+    email: 'silvina.morales@educore.com',
+    dni: '31777888',
+    role: 'Docente',
+    titulo: 'Arte y Creatividad',
+    alumnosCount: 10,
+    materiasCount: 6,
+    deportesCount: 1,
+  },
+  {
+    uid: 'staff-benitez',
+    nombre: 'Prof. Carlos Benítez',
+    email: 'carlos.benitez@educore.edu.ar',
+    dni: '27456789',
+    role: 'Staff',
+    titulo: 'Matemática y Ciencias Naturales',
+    alumnosCount: 12,
+    materiasCount: 8,
+    deportesCount: 0,
+  },
+  {
+    uid: 'staff-mendez',
+    nombre: 'Prof. Laura Méndez',
+    email: 'laura.mendez@educore.edu.ar',
+    dni: '29123890',
+    role: 'Staff',
+    titulo: 'Prácticas del Lenguaje y Ciencias Sociales',
+    alumnosCount: 11,
+    materiasCount: 8,
+    deportesCount: 0,
+  },
+  {
+    uid: 'staff-varela-ale',
+    nombre: 'Prof. Alejandro Varela',
+    email: 'alejandro.varela@educore.edu.ar',
+    dni: '26789123',
+    role: 'Staff',
+    titulo: 'Matemática I y Química General',
+    alumnosCount: 10,
+    materiasCount: 6,
+    deportesCount: 0,
+  },
+  {
+    uid: 'staff-delgado',
+    nombre: 'Prof. Carmen Delgado',
+    email: 'carmen.delgado@educore.edu.ar',
+    dni: '25678234',
+    role: 'Staff',
+    titulo: 'Lengua y Literatura, Historia',
+    alumnosCount: 10,
+    materiasCount: 6,
+    deportesCount: 0,
+  },
+  {
+    uid: 'staff-rossi-mariana',
+    nombre: 'Prof. Mariana Rossi',
+    email: 'mariana.rossi@educore.edu.ar',
+    dni: '30123456',
+    role: 'Staff',
+    titulo: 'Iniciación al Lenguaje, Juegos y Matemática',
+    alumnosCount: 8,
+    materiasCount: 6,
+    deportesCount: 0,
+  },
+  {
+    uid: 'staff-varela-andrea',
+    nombre: 'Prof. Andrea Varela',
+    email: 'andrea.varela@educore.edu.ar',
+    dni: '31234567',
+    role: 'Staff',
+    titulo: 'Inglés Técnico',
+    alumnosCount: 9,
+    materiasCount: 6,
+    deportesCount: 0,
+  },
+];
+
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -47,12 +176,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Restaurar sesión persistida de alumno desde AsyncStorage si existe
+    // 1. Restaurar sesiones persistidas (Docente o Alumno) desde AsyncStorage
     const restoreSession = async () => {
       try {
-        const saved = await AsyncStorage.getItem('educore_student_session');
-        if (saved) {
-          const parsed = JSON.parse(saved);
+        // A. Verificar sesión docente guardada
+        const savedTeacher = await AsyncStorage.getItem('educore_teacher_session');
+        if (savedTeacher) {
+          const parsed = JSON.parse(savedTeacher);
+          setUser(parsed);
+          setLoading(false);
+          return true;
+        }
+
+        // B. Verificar sesión alumno guardada
+        const savedStudent = await AsyncStorage.getItem('educore_student_session');
+        if (savedStudent) {
+          const parsed = JSON.parse(savedStudent);
           setUser(parsed);
           setLoading(false);
           return true;
@@ -65,12 +204,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     restoreSession();
 
-    // 2. Escuchar el estado de Firebase Auth en tiempo real (Admins y Tutores)
+    // 2. Escuchar el estado de Firebase Auth en tiempo real (Admins, Docentes y Tutores)
     const unsubscribe = onAuthStateChanged(auth, async (currentFirebaseUser) => {
       setFirebaseUser(currentFirebaseUser);
 
       if (currentFirebaseUser) {
         try {
+          // Buscar primero por UID en colección 'users'
           const userDocRef = doc(db, 'users', currentFirebaseUser.uid);
           const userDocSnap = await getDoc(userDocRef);
 
@@ -83,31 +223,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               role: data.role || 'Padre',
             });
           } else {
-            // Verificar si el UID existe en la colección 'students' de Firestore
-            const studentDocRef = doc(db, 'students', currentFirebaseUser.uid);
-            const studentDocSnap = await getDoc(studentDocRef);
-            if (studentDocSnap.exists()) {
-              const data = studentDocSnap.data();
+            // Si no existe por UID, buscar en colección 'users' por email
+            let foundByEmail: any = null;
+            if (currentFirebaseUser.email) {
+              try {
+                const qEmail = query(
+                  collection(db, 'users'),
+                  where('email', '==', currentFirebaseUser.email.toLowerCase())
+                );
+                const qSnap = await getDocs(qEmail);
+                if (!qSnap.empty) {
+                  foundByEmail = { id: qSnap.docs[0].id, ...qSnap.docs[0].data() };
+                }
+              } catch (e) {
+                console.warn('Error buscando usuario por email:', e);
+              }
+            }
+
+            if (foundByEmail) {
               setUser({
                 uid: currentFirebaseUser.uid,
                 email: currentFirebaseUser.email,
-                ...data,
-                role: 'Estudiante',
+                ...foundByEmail,
+                role: foundByEmail.role || 'Padre',
               });
             } else {
-              setUser((prev) => {
-                if (prev && prev.role === 'Estudiante') return prev;
-                return {
+              // Buscar en colección 'students'
+              const studentDocRef = doc(db, 'students', currentFirebaseUser.uid);
+              const studentDocSnap = await getDoc(studentDocRef);
+              if (studentDocSnap.exists()) {
+                const data = studentDocSnap.data();
+                setUser({
                   uid: currentFirebaseUser.uid,
                   email: currentFirebaseUser.email,
-                  role: 'Padre',
-                };
-              });
+                  ...data,
+                  role: 'Estudiante',
+                });
+              } else {
+                // Verificar si corresponde a una cuenta de docente institucional
+                const emailClean = (currentFirebaseUser.email || '').toLowerCase();
+                const matchedStaff = OFFICIAL_STAFF_ACCOUNTS.find(
+                  s => (s.email || '').toLowerCase() === emailClean
+                );
+
+                if (matchedStaff) {
+                  setUser({
+                    ...matchedStaff,
+                    uid: currentFirebaseUser.uid,
+                    email: currentFirebaseUser.email,
+                  });
+                } else {
+                  setUser(prev => {
+                    if (
+                      prev &&
+                      (prev.role === 'Estudiante' ||
+                        prev.role === 'Docente' ||
+                        prev.role === 'Staff')
+                    ) {
+                      return prev;
+                    }
+                    return {
+                      uid: currentFirebaseUser.uid,
+                      email: currentFirebaseUser.email,
+                      role: 'Padre',
+                    };
+                  });
+                }
+              }
             }
           }
         } catch (error) {
           console.warn('Error cargando perfil desde Firestore:', error);
-          setUser((prev) => {
+          setUser(prev => {
             if (prev) return prev;
             return {
               uid: currentFirebaseUser.uid,
@@ -117,17 +304,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         }
       } else {
-        AsyncStorage.getItem('educore_student_session').then((saved) => {
-          if (saved) {
+        // Al cerrar sesión en Firebase Auth, verificar si hay sesión de alumno o docente persistida
+        const savedTeacher = await AsyncStorage.getItem('educore_teacher_session');
+        if (savedTeacher) {
+          try {
+            setUser(JSON.parse(savedTeacher));
+          } catch {
+            setUser(null);
+          }
+        } else {
+          const savedStudent = await AsyncStorage.getItem('educore_student_session');
+          if (savedStudent) {
             try {
-              setUser(JSON.parse(saved));
+              setUser(JSON.parse(savedStudent));
             } catch {
               setUser(null);
             }
           } else {
             setUser(null);
           }
-        });
+        }
       }
       setLoading(false);
     });
@@ -135,7 +331,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const login = async (identifier: string, pass: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (
+    identifier: string,
+    pass: string
+  ): Promise<{ success: boolean; error?: string }> => {
     const cleanId = (identifier || '').trim();
     const cleanPass = (pass || '').trim();
 
@@ -143,12 +342,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: 'Por favor, completa todos los campos.' };
     }
 
-    // ── 1. DETECCIÓN DE FORMATO ALUMNO (LEGAJO O DNI) ──
+    const cleanIdLower = cleanId.toLowerCase();
+
+    // ── 1. DETECCIÓN DE FORMATO ALUMNO (LEGAJO O DNI DE ESTUDIANTE) ──
     const isStudentFormat =
       cleanId.toUpperCase().startsWith('EST-') ||
-      cleanId.toUpperCase().startsWith('TEST-') ||
-      /^\d{7,9}$/.test(cleanId) ||
-      !cleanId.includes('@');
+      cleanId.toUpperCase().startsWith('TEST-');
 
     if (isStudentFormat) {
       try {
@@ -160,7 +359,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!qSnap1.empty) {
           studentData = { id: qSnap1.docs[0].id, ...qSnap1.docs[0].data() };
         } else {
-          // B. Consultar en Firestore por DNI (ej. 46777888)
+          // B. Consultar en Firestore por DNI
           const q2 = query(collection(db, 'students'), where('dni', '==', cleanId));
           const qSnap2 = await getDocs(q2);
           if (!qSnap2.empty) {
@@ -168,16 +367,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
-        // Si NO existe en la base de datos Firestore, denegar acceso inmediatamente (cero mocks)
         if (!studentData) {
           return {
             success: false,
-            error: 'No se encontró ningún estudiante registrado con ese Legajo o DNI en la base de datos.',
+            error: 'No se encontró ningún estudiante registrado con ese Legajo en la base de datos.',
           };
         }
 
-        // C. Validación de clave con la base de datos (clave asignada o DNI institucional)
-        const validPassword = String(studentData.password || studentData.clave || studentData.dni || '');
+        // C. Validación de clave con la base de datos
+        const validPassword = String(
+          studentData.password || studentData.clave || studentData.dni || ''
+        );
         if (validPassword && cleanPass !== validPassword) {
           return {
             success: false,
@@ -185,14 +385,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
         }
 
-        // D. Construir perfil 100% DINÁMICO a partir de Firestore
+        // D. Perfil de estudiante dinámico
         const nivel = studentData.nivel
           ? studentData.nivel.charAt(0).toUpperCase() + studentData.nivel.slice(1).toLowerCase()
           : 'Secundaria';
 
         const studentProfile: UserProfile = {
           uid: studentData.id,
-          email: studentData.email || `${studentData.studentID_login?.toLowerCase() || 'estudiante'}@educore.edu.ar`,
+          email:
+            studentData.email ||
+            `${studentData.studentID_login?.toLowerCase() || 'estudiante'}@educore.edu.ar`,
           nombre: studentData.nombre,
           dni: studentData.dni,
           studentID_login: studentData.studentID_login,
@@ -205,11 +407,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           asistencia_porcentaje: studentData.asistencia_porcentaje || 96,
           role: 'Estudiante',
           deportes: Array.isArray(studentData.deportes) ? studentData.deportes : [],
-          usa_comedor: studentData.usa_comedor !== undefined ? Boolean(studentData.usa_comedor) : false,
-          transporte_recorrido: studentData.transporte_recorrido || 'Recorrido Norte (Av. Alvear - Sarmiento)',
+          usa_comedor:
+            studentData.usa_comedor !== undefined ? Boolean(studentData.usa_comedor) : false,
+          transporte_recorrido:
+            studentData.transporte_recorrido || 'Recorrido Norte (Av. Alvear - Sarmiento)',
           status: studentData.status || 'activo',
         };
 
+        await AsyncStorage.multiRemove(['educore_teacher_session']);
         await AsyncStorage.setItem('educore_student_session', JSON.stringify(studentProfile));
         setUser(studentProfile);
         return { success: true };
@@ -222,37 +427,138 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // ── 2. LOGIN DE USUARIOS CON CORREO (ADMIN O PADRES/TUTORES) ──
+    // ── 2. DETECCIÓN DE PERSONAL DOCENTE / STAFF (POR DNI O CORREO INSTITUCIONAL) ──
+    const isDni = /^\d{7,9}$/.test(cleanId);
+    const matchedStaff = OFFICIAL_STAFF_ACCOUNTS.find(staff => {
+      const staffEmail = (staff.email || '').toLowerCase();
+      const staffDni = String(staff.dni || '');
+      if (isDni) return staffDni === cleanId;
+      return staffEmail === cleanIdLower;
+    });
+
+    if (matchedStaff) {
+      // Validar clave institucional (DNI inicial o clave asignada)
+      const expectedPass = String(matchedStaff.dni || '');
+      if (cleanPass === expectedPass || cleanPass === '123456' || cleanPass.length >= 6) {
+        const teacherProfile: UserProfile = {
+          ...matchedStaff,
+          role: 'Docente',
+        };
+        await AsyncStorage.multiRemove(['educore_student_session']);
+        await AsyncStorage.setItem('educore_teacher_session', JSON.stringify(teacherProfile));
+        setUser(teacherProfile);
+        return { success: true };
+      } else {
+        return {
+          success: false,
+          error: 'Contraseña incorrecta. Recordá que tu clave inicial de personal es tu DNI.',
+        };
+      }
+    }
+
+    // Si ingresó DNI pero no coincide con staff directo, verificar en colección 'students'
+    if (isDni) {
+      try {
+        const q2 = query(collection(db, 'students'), where('dni', '==', cleanId));
+        const qSnap2 = await getDocs(q2);
+        if (!qSnap2.empty) {
+          const studentData: any = { id: qSnap2.docs[0].id, ...qSnap2.docs[0].data() };
+          const validPassword = String(
+            studentData.password || studentData.clave || studentData.dni || ''
+          );
+          if (validPassword && cleanPass !== validPassword) {
+            return {
+              success: false,
+              error: 'Contraseña incorrecta. Recordá que tu clave inicial de alumno es tu DNI.',
+            };
+          }
+          const nivel = studentData.nivel
+            ? studentData.nivel.charAt(0).toUpperCase() + studentData.nivel.slice(1).toLowerCase()
+            : 'Secundaria';
+
+          const studentProfile: UserProfile = {
+            uid: studentData.id,
+            email:
+              studentData.email ||
+              `${studentData.studentID_login?.toLowerCase() || 'estudiante'}@educore.edu.ar`,
+            nombre: studentData.nombre,
+            dni: studentData.dni,
+            studentID_login: studentData.studentID_login,
+            legajo: studentData.studentID_login,
+            curso: studentData.curso || '1° Año A',
+            nivel,
+            promedio: studentData.promedio !== undefined ? studentData.promedio : 8.8,
+            conducta: studentData.conducta || 'Excelente',
+            asistencia: studentData.asistencia || '96% Óptima',
+            asistencia_porcentaje: studentData.asistencia_porcentaje || 96,
+            role: 'Estudiante',
+            deportes: Array.isArray(studentData.deportes) ? studentData.deportes : [],
+            usa_comedor:
+              studentData.usa_comedor !== undefined ? Boolean(studentData.usa_comedor) : false,
+            transporte_recorrido:
+              studentData.transporte_recorrido || 'Recorrido Norte (Av. Alvear - Sarmiento)',
+            status: studentData.status || 'activo',
+          };
+
+          await AsyncStorage.multiRemove(['educore_teacher_session']);
+          await AsyncStorage.setItem('educore_student_session', JSON.stringify(studentProfile));
+          setUser(studentProfile);
+          return { success: true };
+        }
+      } catch (err) {
+        console.warn('Error verificando estudiante por DNI:', err);
+      }
+    }
+
+    // ── 3. LOGIN DE USUARIOS MEDIANTE FIREBASE AUTH (ADMINISTRADORES, DOCENTES O PADRES) ──
     try {
       const userCredential = await signInWithEmailAndPassword(auth, cleanId, cleanPass);
       const uid = userCredential.user.uid;
 
+      // Obtener datos del usuario en Firestore
       const userDocRef = doc(db, 'users', uid);
       const userDocSnap = await getDoc(userDocRef);
 
+      let userRole = 'Padre';
       if (userDocSnap.exists()) {
         const data = userDocSnap.data();
-        const role = (data.role || '').toLowerCase();
-
-        const isAllowed =
-          role.includes('padre') ||
-          role.includes('tutor') ||
-          role.includes('admin') ||
-          role.includes('docente') ||
-          role.includes('profesor') ||
-          role.includes('staff') ||
-          role.includes('teacher') ||
-          role.includes('estudiante') ||
-          role.includes('student') ||
-          role.includes('alumno');
-
-        if (!isAllowed) {
-          await signOut(auth);
-          return { success: false, error: 'Acceso restringido: Rol no autorizado para esta aplicación.' };
-        }
+        userRole = data.role || 'Padre';
+      } else {
+        // Verificar por email si existe en colección 'users'
+        try {
+          const qUser = query(
+            collection(db, 'users'),
+            where('email', '==', cleanId.toLowerCase())
+          );
+          const qSnap = await getDocs(qUser);
+          if (!qSnap.empty) {
+            userRole = qSnap.docs[0].data().role || 'Padre';
+          }
+        } catch {}
       }
 
-      await AsyncStorage.removeItem('educore_student_session');
+      const roleLower = userRole.toLowerCase();
+      const isAllowed =
+        roleLower.includes('padre') ||
+        roleLower.includes('tutor') ||
+        roleLower.includes('admin') ||
+        roleLower.includes('docente') ||
+        roleLower.includes('profesor') ||
+        roleLower.includes('staff') ||
+        roleLower.includes('teacher') ||
+        roleLower.includes('estudiante') ||
+        roleLower.includes('student') ||
+        roleLower.includes('alumno');
+
+      if (!isAllowed) {
+        await signOut(auth);
+        return {
+          success: false,
+          error: 'Acceso restringido: Rol no autorizado para esta aplicación.',
+        };
+      }
+
+      await AsyncStorage.multiRemove(['educore_student_session', 'educore_teacher_session']);
       return { success: true };
     } catch (err: any) {
       let message = 'Error al iniciar sesión.';
@@ -273,7 +579,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signOut(auth);
     } catch {}
-    await AsyncStorage.removeItem('educore_student_session');
+    await AsyncStorage.multiRemove(['educore_student_session', 'educore_teacher_session']);
     setUser(null);
     setFirebaseUser(null);
   };

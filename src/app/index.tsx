@@ -40,7 +40,13 @@ const isUserStudent = (user: any): boolean => {
 const isUserTeacher = (user: any): boolean => {
   if (!user) return false;
   const role = String(user.role || '').toLowerCase();
-  return role === 'docente' || role === 'profesor' || role === 'staff' || role === 'teacher';
+  return (
+    role.includes('docente') ||
+    role.includes('profesor') ||
+    role.includes('staff') ||
+    role.includes('teacher') ||
+    role.includes('maestro')
+  );
 };
 
 export default function HomeScreen() {
@@ -54,7 +60,12 @@ export default function HomeScreen() {
   const [currentModule, setCurrentModule] = useState<'dashboard' | 'create' | 'academic' | 'services' | 'reports'>('dashboard');
 
   // Portal activo: 'teacher', 'student', 'family' o 'admin'
-  const [activePortal, setActivePortal] = useState<'teacher' | 'student' | 'family' | 'admin'>('student');
+  const [activePortal, setActivePortal] = useState<'teacher' | 'student' | 'family' | 'admin'>(() => {
+    if (isAdmin) return 'admin';
+    if (isTeacher) return 'teacher';
+    if (isStudent) return 'student';
+    return 'family';
+  });
 
   // Ajustar portal inicial según el rol del usuario autenticado
   useEffect(() => {
