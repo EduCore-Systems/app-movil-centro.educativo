@@ -11,6 +11,7 @@ interface AdminSidebarProps {
   adminName?: string;
   adminInitial?: string;
   isDarkMode?: boolean;
+  onSwitchToFamily?: () => void;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
@@ -22,6 +23,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   adminName = 'Administrador',
   adminInitial = 'A',
   isDarkMode = false,
+  onSwitchToFamily,
 }) => {
   const theme = {
     modalBg: isDarkMode ? '#0F172A' : '#FFFFFF',
@@ -159,6 +161,25 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               </Text>
               {currentModule === 'reports' && <View style={styles.orangeDotRight} />}
             </TouchableOpacity>
+
+            {/* Alternar a Vista Portal Familiar */}
+            {onSwitchToFamily && (
+              <>
+                <Text style={[styles.sidebarSectionTitle, { marginTop: 16 }]}>VISTA DE APODERADOS</Text>
+                <TouchableOpacity
+                  style={styles.sidebarMenuItem}
+                  onPress={() => {
+                    onClose();
+                    onSwitchToFamily();
+                  }}
+                >
+                  <MaterialIcons name="family-restroom" size={20} color="#EA580C" style={{ marginRight: 12 }} />
+                  <Text style={[styles.sidebarMenuText, { color: '#EA580C', fontWeight: '700' }]}>
+                    Portal de Familias
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
           </ScrollView>
 
           <View style={[styles.sidebarFooter, { borderTopColor: theme.divider }]}>
@@ -185,6 +206,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     </Modal>
   );
 };
+
+export default AdminSidebar;
 
 const styles = StyleSheet.create({
   modalOverlay: {
@@ -325,5 +348,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-export default AdminSidebar;

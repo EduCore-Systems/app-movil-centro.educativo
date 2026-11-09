@@ -6,7 +6,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
 
-// Import Organisms
+// Import Organisms Admin
 import AdminTopBar from '../components/organisms/admin/AdminTopBar';
 import AdminSidebar from '../components/organisms/admin/AdminSidebar';
 import AdminDashboardTab from '../components/organisms/admin/AdminDashboardTab';
@@ -14,6 +14,9 @@ import AdminCreationTab from '../components/organisms/admin/AdminCreationTab';
 import AdminAcademicTab from '../components/organisms/admin/AdminAcademicTab';
 import AdminServicesTab from '../components/organisms/admin/AdminServicesTab';
 import AdminReportsTab from '../components/organisms/admin/AdminReportsTab';
+
+// Import Organism Family Portal
+import FamilyPanel from '../components/organisms/family/FamilyPanel';
 
 // Import Types
 import { Student } from '../components/molecules/StudentCard';
@@ -24,6 +27,9 @@ export default function HomeScreen() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState<'dashboard' | 'create' | 'academic' | 'services' | 'reports'>('dashboard');
+
+  // Modo de Portal Activo: 'family' (predeterminado para la fase tutor actual) o 'admin'
+  const [activePortal, setActivePortal] = useState<'family' | 'admin'>('family');
 
   const [students, setStudents] = useState<Student[]>([]);
   const [staffList, setStaffList] = useState<Staff[]>([]);
@@ -125,22 +131,6 @@ export default function HomeScreen() {
             email: 'silvina.morales@educore.com',
             mustChangePassword: false,
           },
-          {
-            id: 'staff-4',
-            nombre: 'Prof. Mariana Rossi',
-            dni: '28444555',
-            role: 'Docente',
-            email: 'mariana.rossi@educore.com',
-            mustChangePassword: false,
-          },
-          {
-            id: 'staff-5',
-            nombre: 'Prof. Sarah Jenkins',
-            dni: '33999000',
-            role: 'Docente',
-            email: 'sarah.jenkins@educore.com',
-            mustChangePassword: false,
-          },
         ];
       }
 
@@ -207,6 +197,21 @@ export default function HomeScreen() {
   const adminName = user?.nombre || user?.email?.split('@')[0] || 'Fabricio Alegre';
   const adminInitial = adminName.charAt(0).toUpperCase();
 
+  // Si el portal activo es 'family', renderizamos el Portal de Familias
+  if (activePortal === 'family') {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0A0F1D' : '#F8FAFC' }]}>
+        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        <FamilyPanel
+          isDarkMode={isDarkMode}
+          onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+          onSwitchToAdmin={() => setActivePortal('admin')}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Si el portal activo es 'admin', renderizamos el Panel Administrador
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0A0F1D' : '#F8FAFC' }]}>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
@@ -256,6 +261,7 @@ export default function HomeScreen() {
         adminName={adminName}
         adminInitial={adminInitial}
         isDarkMode={isDarkMode}
+        onSwitchToFamily={() => setActivePortal('family')}
       />
     </SafeAreaView>
   );

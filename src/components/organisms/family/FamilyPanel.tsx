@@ -1,0 +1,416 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  SafeAreaView,
+} from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import FamilyTopBar from './FamilyTopBar';
+import FamilySidebar from './FamilySidebar';
+import FamilyNavTabs, { FamilyTab } from '../../molecules/family/FamilyNavTabs';
+import FamilyStudentCard from '../../molecules/family/FamilyStudentCard';
+import LinkStudentModal from '../../molecules/family/LinkStudentModal';
+import StudentProfileTab from './StudentProfileTab';
+import StudentSubjectsTab from './StudentSubjectsTab';
+import StudentServicesTab from './StudentServicesTab';
+import EmptyState from '../../molecules/EmptyState';
+import { getChildrenForParent, FamilyStudent } from '../../../services/familyService';
+import { useAuth } from '../../../context/AuthContext';
+
+interface FamilyPanelProps {
+  isDarkMode?: boolean;
+  onToggleTheme?: () => void;
+  onSwitchToAdmin?: () => void;
+}
+
+export const FamilyPanel: React.FC<FamilyPanelProps> = ({
+  isDarkMode = true,
+  onToggleTheme,
+  onSwitchToAdmin,
+}) => {
+  const { user, logout } = useAuth();
+  const [children, setChildren] = useState<FamilyStudent[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<FamilyStudent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<FamilyTab>('resumen');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+
+  const tutorName = user?.nombre || user?.name || (user?.email ? `Familia ${user.email.split('@')[0]}` : 'Familia Díaz');
+
+  const loadChildren = async () => {
+    setLoading(true);
+    try {
+      const data = await getChildrenForParent(user?.uid, user?.email);
+      setChildren(data);
+      if (data.length > 0) {
+        setSelectedStudent(data[0]);
+      }
+    } catch (err) {
+      console.error('Error al cargar hijos:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadChildren();
+  }, [user?.uid]);
+
+  const handleStudentLinked = (newStudent: FamilyStudent) => {
+    setChildren((prev) => [newStudent, ...prev]);
+    setSelectedStudent(newStudent);
+  };
+
+  const handleStudentUpdated = (updated: FamilyStudent) => {
+    setSelectedStudent(updated);
+    setChildren((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+  };
+
+  const theme = {
+    bg: isDarkMode ? '#0A0F1D' : '#F8FAFC',
+    cardBg: isDarkMode ? '#1E293B' : '#FFFFFF',
+    border: isDarkMode ? '#334155' : '#E2E8F0',
+    titleColor: isDarkMode ? '#F8FAFC' : '#0F172A',
+    subColor: isDarkMode ? '#94A3B8' : '#64748B',
+  };
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
+      {/* ── TOPBAR FAMILIAR ── */}
+      <FamilyTopBar
+        isDarkMode={isDarkMode}
+        onOpenSidebar={() => setIsSidebarOpen(true)}
+        onToggleTheme={onToggleTheme || (() => {})}
+        tutorName={tutorName}
+      />
+
+      <ScrollView
+        style={styles.contentScroll}
+        contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── CABECERA DEL PORTAL ── */}
+        <View style={styles.headerBanner}>
+          <View>
+            <View style={styles.portalTitleRow}>
+              <Text style={[styles.portalTitle, { color: theme.titleColor }]}>
+                Portal de Familias
+              </Text>
+              <View style={styles.matriculaPill}>
+                <View style={styles.greenPulse} />
+                <Text style={styles.matriculaPillText}>Matrícula al Día</Text>
+              </View>
+            </View>
+            <Text style={[styles.portalSub, { color: theme.subColor }]}>
+              Centro Educativo EduCore · Ciclo Lectivo 2026
+            </Text>
+          </View>
+
+          {/* Botones de Documentación Rápida */}
+          <View style={styles.docButtonsRow}>
+            <TouchableOpacity
+              style={[styles.docBtnOutline, { borderColor: theme.border, backgroundColor: theme.cardBg }]}
+              onPress={() => Alert.alert('Boletín Actual', 'El visor de boletín oficial estará disponible en la Fase 3.')}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="download" size={16} color={theme.subColor} style={{ marginRight: 6 }} />
+              <Text style={[styles.docBtnOutlineText, { color: theme.titleColor }]}>Boletín Actual</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.docBtnFilled}
+              onPress={() => Alert.alert('Certificado Regular', 'El certificado de alumno regular estará disponible en la Fase 3.')}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="verified" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.docBtnFilledText}>Certificado Regular</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* ── SELECTOR: MIS HIJOS ── */}
+        <View style={styles.sectionHeaderRow}>
+          <MaterialIcons name="family-restroom" size={20} color="#EA580C" style={{ marginRight: 6 }} />
+          <Text style={[styles.sectionTitle, { color: theme.titleColor }]}>Mis Hijos</Text>
+          {children.length > 0 && (
+            <View style={[styles.countBadge, { backgroundColor: isDarkMode ? '#1E293B' : '#E2E8F0' }]}>
+              <Text style={[styles.countBadgeText, { color: theme.subColor }]}>
+                {children.length} {children.length === 1 ? 'alumno vinculado' : 'alumnos vinculados'}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {loading ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#EA580C" />
+            <Text style={[styles.loadingText, { color: theme.subColor }]}>Cargando estudiantes vinculados...</Text>
+          </View>
+        ) : (
+          <View style={styles.childrenSection}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.childrenCardsRow}
+            >
+              {children.map((child) => (
+                <FamilyStudentCard
+                  key={child.id}
+                  student={child}
+                  isSelected={selectedStudent?.id === child.id}
+                  onSelect={() => setSelectedStudent(child)}
+                  isDarkMode={isDarkMode}
+                />
+              ))}
+            </ScrollView>
+
+            {/* Botón "+ Vincular Estudiante" */}
+            <TouchableOpacity
+              style={[
+                styles.linkStudentBtn,
+                {
+                  backgroundColor: theme.cardBg,
+                  borderColor: isDarkMode ? '#334155' : '#CBD5E1',
+                },
+              ]}
+              onPress={() => setIsLinkModalOpen(true)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.linkIconCircle, { backgroundColor: isDarkMode ? '#0F172A' : '#F1F5F9' }]}>
+                <MaterialIcons name="person-add" size={18} color="#EA580C" />
+              </View>
+              <Text style={[styles.linkStudentText, { color: theme.titleColor }]}>
+                Vincular Estudiante
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ── CONTENIDO DEL ESTUDIANTE SELECCIONADO ── */}
+        {selectedStudent && (
+          <View style={{ marginTop: 14 }}>
+            {/* Píldoras de Navegación Modular */}
+            <FamilyNavTabs
+              activeTab={activeTab}
+              onSelectTab={setActiveTab}
+              isDarkMode={isDarkMode}
+            />
+
+            {/* 1. Ficha del Estudiante */}
+            {activeTab === 'resumen' && (
+              <StudentProfileTab student={selectedStudent} isDarkMode={isDarkMode} />
+            )}
+
+            {/* 2. Materias y Docentes (Fase 2) */}
+            {activeTab === 'materias' && (
+              <StudentSubjectsTab
+                student={selectedStudent}
+                isDarkMode={isDarkMode}
+                onOpenChatWithTeacher={(subject) => {
+                  setActiveTab('chat');
+                }}
+              />
+            )}
+
+            {/* 3. Servicios Escolares (Fase 2) */}
+            {activeTab === 'servicios' && (
+              <StudentServicesTab
+                student={selectedStudent}
+                isDarkMode={isDarkMode}
+                onStudentUpdated={handleStudentUpdated}
+              />
+            )}
+
+            {/* 4. Consultas con Docentes (Fase 3) */}
+            {activeTab === 'chat' && (
+              <EmptyState
+                icon="chat"
+                title="Consultas con Docentes (Fase 3)"
+                subtitle="El canal de mensajería directa con los docentes a cargo se integrará en el siguiente paso."
+                isDarkMode={isDarkMode}
+              />
+            )}
+          </View>
+        )}
+      </ScrollView>
+
+      {/* ── SIDEBAR FAMILIAR ── */}
+      <FamilySidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        onLogout={logout}
+        tutorName={tutorName}
+        childrenCount={children.length}
+        onOpenDocument={(type) => Alert.alert('Documento Oficial', `Visor de ${type} en Fase 3.`)}
+        onSwitchToAdmin={onSwitchToAdmin}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* ── MODAL VINCULAR ESTUDIANTE ── */}
+      <LinkStudentModal
+        isOpen={isLinkModalOpen}
+        onClose={() => setIsLinkModalOpen(false)}
+        parentId={user?.uid || 'parent-demo'}
+        onStudentLinked={handleStudentLinked}
+        isDarkMode={isDarkMode}
+      />
+    </SafeAreaView>
+  );
+};
+
+export default FamilyPanel;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  contentScroll: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  headerBanner: {
+    marginBottom: 20,
+    marginTop: 6,
+  },
+  portalTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  portalTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  matriculaPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 16,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  greenPulse: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+    marginRight: 5,
+  },
+  matriculaPillText: {
+    color: '#059669',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  portalSub: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginTop: 4,
+  },
+  docButtonsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  docBtnOutline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  docBtnOutlineText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  docBtnFilled: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: '#EA580C',
+    shadowColor: '#EA580C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  docBtnFilledText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  countBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  countBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  loadingBox: {
+    padding: 30,
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 10,
+  },
+  childrenSection: {
+    marginBottom: 10,
+  },
+  childrenCardsRow: {
+    flexDirection: 'row',
+    paddingBottom: 6,
+  },
+  linkStudentBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 13,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    gap: 10,
+    marginTop: 6,
+  },
+  linkIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  linkStudentText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+});
