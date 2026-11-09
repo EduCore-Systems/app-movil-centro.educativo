@@ -238,6 +238,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role.includes('padre') ||
           role.includes('tutor') ||
           role.includes('admin') ||
+          role.includes('docente') ||
+          role.includes('profesor') ||
+          role.includes('staff') ||
+          role.includes('teacher') ||
           role.includes('estudiante') ||
           role.includes('student') ||
           role.includes('alumno');
