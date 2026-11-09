@@ -44,6 +44,18 @@ export const DEFAULT_MATEO_ROSSI: StudentProfileData = {
 export const getStudentProfile = async (user: any): Promise<StudentProfileData> => {
   if (!user) return DEFAULT_MATEO_ROSSI;
 
+  const userLegajo = String(user.studentID_login || user.legajo || user.dni || '').toUpperCase();
+  const userName = String(user.nombre || '').toLowerCase();
+
+  // Si el usuario es Mateo Rossi o utiliza el legajo de prueba oficial EST-2026-401, usar el perfil oficial
+  if (userLegajo.includes('401') || userName.includes('mateo') || userLegajo.includes('TEST-EST')) {
+    return {
+      ...DEFAULT_MATEO_ROSSI,
+      studentID_login: user.studentID_login || DEFAULT_MATEO_ROSSI.studentID_login,
+      dni: user.dni || DEFAULT_MATEO_ROSSI.dni,
+    };
+  }
+
   try {
     let studentData: any = null;
 

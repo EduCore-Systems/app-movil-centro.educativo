@@ -170,45 +170,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (isStudentFormat) {
       try {
-        let studentData: any = null;
+        let studentProfile: UserProfile;
 
-        try {
-          const isDni = /^\d+$/.test(cleanId);
-          const fieldToQuery = isDni ? 'dni' : 'studentID_login';
-          const q = query(collection(db, 'students'), where(fieldToQuery, '==', cleanId));
-          const qSnap = await getDocs(q);
-          if (!qSnap.empty) {
-            studentData = { id: qSnap.docs[0].id, ...qSnap.docs[0].data() };
-          }
-        } catch (dbErr) {
-          console.warn('Consulta a colección students en Firestore con fallback:', dbErr);
-        }
-
-        const studentProfile: UserProfile = studentData
-          ? {
-              uid: studentData.id,
-              email: studentData.email || `${cleanId.toLowerCase()}@educore.edu.ar`,
-              nombre: studentData.nombre || 'Mateo Rossi',
-              dni: studentData.dni || cleanId,
-              studentID_login: studentData.studentID_login || cleanId,
-              legajo: studentData.studentID_login || cleanId,
-              curso: studentData.curso || '1° Año A',
-              nivel: studentData.nivel || 'Secundaria',
-              promedio: studentData.promedio !== undefined ? studentData.promedio : 8.8,
-              conducta: studentData.conducta || 'Excelente',
-              asistencia: studentData.asistencia || '96% Óptima',
-              asistencia_porcentaje: studentData.asistencia_porcentaje || 96,
-              role: 'Estudiante',
-              deportes: Array.isArray(studentData.deportes) ? studentData.deportes : ['XjMjzVd0XVwv0jJSa24c', '5lW9VLF6xaD7dMILDixr'],
-              usa_comedor: studentData.usa_comedor !== undefined ? Boolean(studentData.usa_comedor) : true,
-              transporte_recorrido: studentData.transporte_recorrido || 'Recorrido Norte (Av. Alvear - Sarmiento)',
-              status: studentData.status || 'activo',
+        // Si el identificador es EST-2026-401 o Mateo, es el perfil oficial de Mateo Rossi (igual que en la web)
+        if (
+          cleanId.toUpperCase().includes('401') ||
+          cleanId.toLowerCase().includes('mateo') ||
+          cleanId.toLowerCase().includes('rossi')
+        ) {
+          studentProfile = {
+            ...DEFAULT_STUDENT_SESSION,
+            studentID_login: cleanId.toUpperCase().startsWith('EST-') ? cleanId : DEFAULT_STUDENT_SESSION.studentID_login,
+            dni: /^\d+$/.test(cleanId) ? cleanId : DEFAULT_STUDENT_SESSION.dni,
+          };
+        } else {
+          // Intentar localizar en Firestore para otros estudiantes
+          let studentData: any = null;
+          try {
+            const isDni = /^\d+$/.test(cleanId);
+            const fieldToQuery = isDni ? 'dni' : 'studentID_login';
+            const q = query(collection(db, 'students'), where(fieldToQuery, '==', cleanId));
+            const qSnap = await getDocs(q);
+            if (!qSnap.empty) {
+              studentData = { id: qSnap.docs[0].id, ...qSnap.docs[0].data() };
             }
-          : {
-              ...DEFAULT_STUDENT_SESSION,
-              studentID_login: cleanId.toUpperCase().startsWith('EST-') ? cleanId : DEFAULT_STUDENT_SESSION.studentID_login,
-              dni: /^\d+$/.test(cleanId) ? cleanId : DEFAULT_STUDENT_SESSION.dni,
-            };
+          } catch (dbErr) {
+            console.warn('Consulta a colección students en Firestore:', dbErr);
+          }
+
+          studentProfile = studentData
+            ? {
+                uid: studentData.id,
+                email: studentData.email || `${cleanId.toLowerCase()}@educore.edu.ar`,
+                nombre: studentData.nombre,
+                dni: studentData.dni || cleanId,
+                studentID_login: studentData.studentID_login || cleanId,
+                legajo: studentData.studentID_login || cleanId,
+                curso: studentData.curso || '1° Año A',
+                nivel: studentData.nivel || 'Secundaria',
+                promedio: studentData.promedio !== undefined ? studentData.promedio : 8.8,
+                conducta: studentData.conducta || 'Excelente',
+                asistencia: studentData.asistencia || '96% Óptima',
+                asistencia_porcentaje: studentData.asistencia_porcentaje || 96,
+                role: 'Estudiante',
+                deportes: Array.isArray(studentData.deportes) ? studentData.deportes : ['XjMjzVd0XVwv0jJSa24c', '5lW9VLF6xaD7dMILDixr'],
+                usa_comedor: studentData.usa_comedor !== undefined ? Boolean(studentData.usa_comedor) : true,
+                transporte_recorrido: studentData.transporte_recorrido || 'Recorrido Norte (Av. Alvear - Sarmiento)',
+                status: studentData.status || 'activo',
+              }
+            : {
+                ...DEFAULT_STUDENT_SESSION,
+                studentID_login: cleanId.toUpperCase().startsWith('EST-') ? cleanId : DEFAULT_STUDENT_SESSION.studentID_login,
+                dni: /^\d+$/.test(cleanId) ? cleanId : DEFAULT_STUDENT_SESSION.dni,
+              };
+        }
 
         await AsyncStorage.setItem('educore_student_session', JSON.stringify(studentProfile));
         setUser(studentProfile);
