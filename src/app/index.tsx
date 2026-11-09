@@ -17,44 +17,54 @@ import AdminReportsTab from '../components/organisms/admin/AdminReportsTab';
 
 // Import Organism Family Portal
 import FamilyPanel from '../components/organisms/family/FamilyPanel';
+import StudentPanel from '../components/organisms/student/StudentPanel';
 
 // Import Types
 import { Student } from '../components/molecules/StudentCard';
 import { Staff } from '../components/molecules/StaffCard';
 
-// Verificador estricto de rol administrador
+// Verificadores estrictos de roles
 const isUserAdmin = (user: any): boolean => {
   if (!user) return false;
   const role = String(user.role || '').toLowerCase();
   return role === 'user_admin' || role === 'admin' || role === 'administrador';
 };
 
+const isUserStudent = (user: any): boolean => {
+  if (!user) return false;
+  const role = String(user.role || '').toLowerCase();
+  return role === 'estudiante' || role === 'student' || role === 'user_student' || /^est-\d+/i.test(String(user.studentID_login || user.dni || ''));
+};
+
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const isAdmin = isUserAdmin(user);
+  const isStudent = isUserStudent(user);
 
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState<'dashboard' | 'create' | 'academic' | 'services' | 'reports'>('dashboard');
 
-  // Portal activo: Los administradores entran al admin por defecto; las familias entran a 'family'
-  const [activePortal, setActivePortal] = useState<'family' | 'admin'>('family');
+  // Portal activo: 'student', 'family' o 'admin'
+  const [activePortal, setActivePortal] = useState<'student' | 'family' | 'admin'>('student');
 
   // Ajustar portal inicial según el rol del usuario autenticado
   useEffect(() => {
     if (isAdmin) {
       setActivePortal('admin');
+    } else if (isStudent) {
+      setActivePortal('student');
     } else {
       setActivePortal('family');
     }
-  }, [isAdmin]);
+  }, [isAdmin, isStudent]);
 
-  // Guardia de seguridad: Si NO es administrador, forzar siempre a 'family'
+  // Guardia de seguridad: Si NO es administrador, jamás permitir acceso a 'admin'
   useEffect(() => {
     if (!isAdmin && activePortal === 'admin') {
-      setActivePortal('family');
+      setActivePortal(isStudent ? 'student' : 'family');
     }
-  }, [isAdmin, activePortal]);
+  }, [isAdmin, isStudent, activePortal]);
 
   const [students, setStudents] = useState<Student[]>([]);
   const [staffList, setStaffList] = useState<Staff[]>([]);
@@ -223,8 +233,20 @@ export default function HomeScreen() {
   const adminInitial = adminName.charAt(0).toUpperCase();
 
   // ── CONTROL DE ACCESO ESTRICTO POR ROL (RBAC) ──
-  // Si el usuario NO es administrador o si eligió la vista familiar, se renderiza EXCLUSIVAMENTE el Portal Familiar.
-  // Las familias nunca reciben acceso ni rutas al panel administrador.
+  // 1. Si el portal activo es 'student' o el usuario es estudiante, renderizar el Portal del Alumno
+  if (activePortal === 'student') {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0A0F1D' : '#F8FAFC' }]}>
+        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        <StudentPanel
+          isDarkMode={isDarkMode}
+          onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // 2. Si no es admin o eligió la vista familiar, renderizar el Portal Familiar
   if (!isAdmin || activePortal === 'family') {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0A0F1D' : '#F8FAFC' }]}>
