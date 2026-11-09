@@ -11,6 +11,7 @@ import TeacherTopBar from './TeacherTopBar';
 import TeacherSidebar from './TeacherSidebar';
 import TeacherNavTabs, { TeacherTab } from '../../molecules/teacher/TeacherNavTabs';
 import TeacherCoursesTab from './TeacherCoursesTab';
+import { TeacherAttendanceTab } from './TeacherAttendanceTab';
 import {
   TeacherCourseSubject,
   TeacherProfileData,
@@ -121,14 +122,11 @@ export const TeacherPanel: React.FC<TeacherPanelProps> = ({
 
             {/* PESTAÑA 2: Tomar Asistencia (Fase 2) */}
             {activeTab === 'asistencia' && (
-              <View style={[styles.placeholderCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-                <Text style={[styles.placeholderTitle, { color: theme.titleColor }]}>
-                  Tomar Asistencia
-                </Text>
-                <Text style={[styles.placeholderSub, { color: theme.subColor }]}>
-                  Fase 2: Selector de materia, fecha, botones Todos Presentes y nómina con [P, T, AJ, AI].
-                </Text>
-              </View>
+              <TeacherAttendanceTab
+                subjects={subjects}
+                selectedSubjectId={selectedSubjectId}
+                isDarkMode={isDarkMode}
+              />
             )}
 
             {/* PESTAÑA 3: Mensajes con Familias (Fase 3) */}
