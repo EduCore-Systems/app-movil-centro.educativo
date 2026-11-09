@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   StyleSheet,
   SafeAreaView,
+  Keyboard,
+  Platform,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import FamilyTopBar from './FamilyTopBar';
@@ -25,13 +27,11 @@ import { useAuth } from '../../../context/AuthContext';
 interface FamilyPanelProps {
   isDarkMode?: boolean;
   onToggleTheme?: () => void;
-  onSwitchToAdmin?: () => void;
 }
 
 export const FamilyPanel: React.FC<FamilyPanelProps> = ({
   isDarkMode = true,
   onToggleTheme,
-  onSwitchToAdmin,
 }) => {
   const { user, logout } = useAuth();
   const [children, setChildren] = useState<FamilyStudent[]>([]);
@@ -40,6 +40,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
   const [activeTab, setActiveTab] = useState<FamilyTab>('resumen');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // Estado para el Visor Formal de Documentos Oficiales (Boletín / Certificado Regular)
   const [docModal, setDocModal] = useState<{ isOpen: boolean; type: 'boletin' | 'certificado' }>({
@@ -71,6 +72,30 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
   useEffect(() => {
     loadChildren();
   }, [user?.uid]);
+
+  // Soporte para elevar y hacer scroll cuando el teclado se despliega
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+      if (activeTab === 'chat') {
+        setTimeout(() => {
+          mainScrollRef.current?.scrollToEnd({ animated: true });
+        }, 150);
+      }
+    });
+
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [activeTab]);
 
   const handleStudentLinked = (newStudent: FamilyStudent) => {
     setChildren((prev) => [newStudent, ...prev]);
@@ -121,8 +146,12 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
       <ScrollView
         ref={mainScrollRef}
         style={styles.contentScroll}
-        contentContainerStyle={styles.scrollContentContainer}
+        contentContainerStyle={[
+          styles.scrollContentContainer,
+          activeTab === 'chat' && keyboardHeight > 0 && { paddingBottom: keyboardHeight + 30 },
+        ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* ── CABECERA DEL PORTAL ── */}
         <View style={styles.headerBanner}>
@@ -243,7 +272,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
               <StudentSubjectsTab
                 student={selectedStudent}
                 isDarkMode={isDarkMode}
-                onOpenChatWithTeacher={(subject) => {
+                onOpenChatWithTeacher={() => {
                   handleSelectTab('chat');
                 }}
               />
@@ -258,7 +287,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
               />
             )}
 
-            {/* 4. Consultas con Docentes (Fase 3 - Activa) */}
+            {/* 4. Consultas con Docentes (Fase 3 - Sincronizado en tiempo real) */}
             {activeTab === 'chat' && (
               <FamilyChatTab
                 student={selectedStudent}
@@ -281,7 +310,6 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
         tutorName={tutorName}
         childrenCount={children.length}
         onOpenDocument={(type) => setDocModal({ isOpen: true, type })}
-        onSwitchToAdmin={onSwitchToAdmin}
         isDarkMode={isDarkMode}
       />
 
@@ -305,8 +333,6 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
   );
 };
 
-export default FamilyPanel;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -315,62 +341,63 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContentContainer: {
-    padding: 16,
-    paddingBottom: 100,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
   headerBanner: {
+    flexDirection: 'column',
+    gap: 12,
     marginBottom: 20,
-    marginTop: 6,
   },
   portalTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
   },
   portalTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '900',
     letterSpacing: -0.5,
   },
   matriculaPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 16,
     backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderColor: 'rgba(16, 185, 129, 0.25)',
   },
   greenPulse: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: '#10B981',
-    marginRight: 5,
+    marginRight: 6,
   },
   matriculaPillText: {
-    color: '#059669',
+    color: '#10B981',
     fontSize: 11,
     fontWeight: '700',
   },
   portalSub: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 12,
     marginTop: 4,
   },
   docButtonsRow: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 14,
+    marginTop: 4,
   },
   docBtnOutline: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 14,
     borderWidth: 1,
   },
   docBtnOutlineText: {
@@ -380,20 +407,20 @@ const styles = StyleSheet.create({
   docBtnFilled: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
     backgroundColor: '#EA580C',
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 14,
     shadowColor: '#EA580C',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   docBtnFilledText: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -401,55 +428,56 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '800',
+    marginRight: 8,
   },
   countBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
-    marginLeft: 8,
   },
   countBadgeText: {
     fontSize: 11,
     fontWeight: '600',
   },
   loadingBox: {
-    padding: 30,
+    paddingVertical: 30,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingText: {
-    fontSize: 13,
-    fontWeight: '600',
     marginTop: 10,
+    fontSize: 12,
   },
   childrenSection: {
     marginBottom: 10,
   },
   childrenCardsRow: {
-    flexDirection: 'row',
-    paddingBottom: 6,
+    paddingRight: 10,
+    gap: 12,
   },
   linkStudentBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 13,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    gap: 10,
-    marginTop: 6,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 12,
+    gap: 8,
   },
   linkIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   linkStudentText: {
     fontSize: 13,
     fontWeight: '700',
   },
 });
+
+export default FamilyPanel;
