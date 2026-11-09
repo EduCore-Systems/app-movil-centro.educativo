@@ -75,15 +75,15 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
-          {/* Campo Correo Electrónico */}
-          <Text style={styles.label}>Correo Electrónico</Text>
+          {/* Campo Correo Electrónico o Legajo */}
+          <Text style={styles.label}>Correo Electrónico o Legajo</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="mail-outline" size={20} color="#94A3B8" style={styles.inputIconLeft} />
             <TextInput
               style={styles.input}
-              placeholder="ej. usuario@email.com"
+              placeholder="ej. usuario@email.com o EST-2026-401"
               placeholderTextColor="#94A3B8"
-              keyboardType="email-address"
+              keyboardType="default"
               autoCapitalize="none"
               value={email}
               onChangeText={setEmail}
