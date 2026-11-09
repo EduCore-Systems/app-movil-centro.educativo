@@ -48,14 +48,8 @@ export const StudentTopBar: React.FC<StudentTopBarProps> = ({
         </View>
       </View>
 
-      {/* ── DERECHA: CICLO LECTIVO, TEMA Y AVATAR ── */}
+      {/* ── DERECHA: TEMA Y AVATAR ── */}
       <View style={styles.rightSection}>
-        {/* Píldora Ciclo Activo */}
-        <View style={styles.cycleBadge}>
-          <View style={styles.greenDot} />
-          <Text style={styles.cycleText}>Ciclo 2026 Activo</Text>
-        </View>
-
         {/* Toggle de Modo Claro / Oscuro */}
         <TouchableOpacity
           onPress={onToggleTheme}
@@ -127,28 +121,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  cycleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.25)',
-  },
-  greenDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#10B981',
-    marginRight: 5,
-  },
-  cycleText: {
-    color: '#10B981',
-    fontSize: 10.5,
-    fontWeight: '700',
   },
   themeBtn: {
     padding: 6,

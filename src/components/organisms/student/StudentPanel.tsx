@@ -6,11 +6,14 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Text,
+  TouchableOpacity,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import StudentTopBar from './StudentTopBar';
 import StudentSidebar from './StudentSidebar';
 import StudentNavTabs, { StudentTab } from '../../molecules/student/StudentNavTabs';
 import StudentProfileTab from './StudentProfileTab';
+import StudentSubjectsTab from './StudentSubjectsTab';
 import FamilyDocumentModal from '../family/FamilyDocumentModal';
 import AttendanceHistoryModal from '../../molecules/family/AttendanceHistoryModal';
 import { getStudentAttendanceHistory, AttendanceRecord } from '../../../services/attendanceService';
@@ -39,7 +42,7 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
   });
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-  const [totalClasses, setTotalClasses] = useState(20);
+  const [totalClasses, setTotalClasses] = useState(25);
 
   const mainScrollRef = useRef<any>(null);
 
@@ -56,7 +59,7 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
           if (attData.totalClasses) setTotalClasses(attData.totalClasses);
         }
       } catch (err) {
-        console.error('Error cargando estudiante:', err);
+        console.warn('Error cargando perfil del estudiante:', err);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -67,8 +70,8 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
 
   const theme = {
     bg: isDarkMode ? '#0A0F1D' : '#F8FAFC',
-    cardBg: isDarkMode ? '#1E293B' : '#FFFFFF',
-    border: isDarkMode ? '#334155' : '#E2E8F0',
+    cardBg: isDarkMode ? '#0F172A' : '#FFFFFF',
+    border: isDarkMode ? '#1E293B' : '#E2E8F0',
     titleColor: isDarkMode ? '#F8FAFC' : '#0F172A',
     subColor: isDarkMode ? '#94A3B8' : '#64748B',
   };
@@ -78,9 +81,11 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
     mainScrollRef.current?.scrollTo({ y: 0, animated: true });
   };
 
+  const firstName = (student.nombre || 'Mateo').split(' ')[0];
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      {/* ── TOPBAR DEL ESTUDIANTE ── */}
+      {/* ── TOPBAR DEL ESTUDIANTE (SIN PÍLDORA CICLO) ── */}
       <StudentTopBar
         isDarkMode={isDarkMode}
         onOpenSidebar={() => setIsSidebarOpen(true)}
@@ -94,6 +99,46 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
         contentContainerStyle={styles.scrollContentContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* ── HERO SALUDO Y BOTONES CONSTANCIAS (PERSISTENTES ARRIBA) ── */}
+        <View style={styles.heroSection}>
+          <View style={styles.heroLeft}>
+            <View style={styles.greetingRow}>
+              <Text style={[styles.greetingTitle, { color: theme.titleColor }]}>
+                Hola, {firstName} 👋
+              </Text>
+              <View style={styles.matriculaPill}>
+                <View style={styles.greenPulse} />
+                <Text style={styles.matriculaPillText}>Matrícula Regular</Text>
+              </View>
+            </View>
+
+            <Text style={[styles.schoolSubtitle, { color: theme.subColor }]}>
+              Centro Educativo EduCore · {student.curso} ({student.nivel})
+            </Text>
+          </View>
+
+          {/* Botones de Descarga Rápida */}
+          <View style={styles.docButtonsRow}>
+            <TouchableOpacity
+              style={[styles.docBtnOutline, { borderColor: theme.border, backgroundColor: theme.cardBg }]}
+              onPress={() => setDocModal({ isOpen: true, type: 'boletin' })}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="download" size={16} color={theme.subColor} style={{ marginRight: 6 }} />
+              <Text style={[styles.docBtnOutlineText, { color: theme.titleColor }]}>Descargar Boletín</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.docBtnFilled}
+              onPress={() => setDocModal({ isOpen: true, type: 'certificado' })}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="verified" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.docBtnFilledText}>Certificado Regular</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* ── NAVEGADOR DE PESTAÑAS ── */}
         <StudentNavTabs
           activeTab={activeTab}
@@ -116,20 +161,12 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
                 student={student}
                 isDarkMode={isDarkMode}
                 onOpenAttendanceModal={() => setIsAttendanceModalOpen(true)}
-                onOpenDocument={(type) => setDocModal({ isOpen: true, type })}
               />
             )}
 
             {/* PESTAÑA 2: Mis Asignaturas (Fase 2) */}
             {activeTab === 'materias' && (
-              <View style={[styles.placeholderCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-                <Text style={[styles.placeholderTitle, { color: theme.titleColor }]}>
-                  Mis Asignaturas en Curso
-                </Text>
-                <Text style={[styles.placeholderSub, { color: theme.subColor }]}>
-                  Fase 2: Grilla temática con Matemática I, Lengua, Química, Historia e Inglés.
-                </Text>
-              </View>
+              <StudentSubjectsTab isDarkMode={isDarkMode} />
             )}
 
             {/* PESTAÑA 3: Horario Semanal (Fase 3) */}
@@ -151,7 +188,7 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
                   Servicios y Talleres
                 </Text>
                 <Text style={[styles.placeholderSub, { color: theme.subColor }]}>
-                  Fase 4: Deportes extracurriculares con cupo 2/2 y logística en modo lectura.
+                  Fase 4: Deportes extracurriculares con cupo 2/2 y logística escolar.
                 </Text>
               </View>
             )}
@@ -207,6 +244,85 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 40,
+    gap: 16,
+  },
+  heroSection: {
+    gap: 12,
+  },
+  heroLeft: {
+    gap: 4,
+  },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  greetingTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  matriculaPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  greenPulse: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+    marginRight: 6,
+  },
+  matriculaPillText: {
+    color: '#10B981',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  schoolSubtitle: {
+    fontSize: 12.5,
+    marginTop: 2,
+  },
+  docButtonsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  docBtnOutline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  docBtnOutlineText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  docBtnFilled: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EA580C',
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 14,
+    shadowColor: '#EA580C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  docBtnFilledText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   loadingBox: {
     paddingVertical: 40,

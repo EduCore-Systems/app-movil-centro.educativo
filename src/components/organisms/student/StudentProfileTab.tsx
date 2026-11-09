@@ -7,14 +7,12 @@ interface StudentProfileTabProps {
   student: StudentProfileData;
   isDarkMode?: boolean;
   onOpenAttendanceModal?: () => void;
-  onOpenDocument?: (type: 'boletin' | 'certificado') => void;
 }
 
 export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
   student,
   isDarkMode = true,
   onOpenAttendanceModal,
-  onOpenDocument,
 }) => {
   const theme = {
     cardBg: isDarkMode ? '#0F172A' : '#FFFFFF',
@@ -26,47 +24,7 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* ── 1. CABECERA SALUDO (Hola, Mateo 👋) ── */}
-      <View style={styles.heroSection}>
-        <View style={styles.heroLeft}>
-          <View style={styles.greetingRow}>
-            <Text style={[styles.greetingTitle, { color: theme.titleColor }]}>
-              Hola, Mateo 👋
-            </Text>
-            <View style={styles.matriculaPill}>
-              <View style={styles.greenPulse} />
-              <Text style={styles.matriculaPillText}>Matrícula Regular</Text>
-            </View>
-          </View>
-
-          <Text style={[styles.schoolSubtitle, { color: theme.subColor }]}>
-            Centro Educativo EduCore · {student.curso} ({student.nivel})
-          </Text>
-        </View>
-
-        {/* Botones de Documentación Rápida */}
-        <View style={styles.docButtonsRow}>
-          <TouchableOpacity
-            style={[styles.docBtnOutline, { borderColor: theme.border, backgroundColor: theme.cardBg }]}
-            onPress={() => onOpenDocument?.('boletin')}
-            activeOpacity={0.8}
-          >
-            <MaterialIcons name="download" size={16} color={theme.subColor} style={{ marginRight: 6 }} />
-            <Text style={[styles.docBtnOutlineText, { color: theme.titleColor }]}>Descargar Boletín</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.docBtnFilled}
-            onPress={() => onOpenDocument?.('certificado')}
-            activeOpacity={0.8}
-          >
-            <MaterialIcons name="verified" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.docBtnFilledText}>Certificado Regular</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* ── 2. TARJETA PRINCIPAL DEL ALUMNO (MR - MATEO ROSSI) ── */}
+      {/* ── TARJETA PRINCIPAL DEL ALUMNO (MR - MATEO ROSSI) ── */}
       <View style={[styles.studentCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
         <View style={styles.cardHeaderRow}>
           {/* Avatar MR con punto verde */}
@@ -121,7 +79,7 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
           </View>
         </View>
 
-        {/* ── 3. MÉTRICAS: ASISTENCIA, PROMEDIO Y CONDUCTA (3 PÍLDORAS) ── */}
+        {/* ── MÉTRICAS: ASISTENCIA, PROMEDIO Y CONDUCTA (3 PÍLDORAS) ── */}
         <View style={styles.metricsRow}>
           {/* Asistencia */}
           <TouchableOpacity
@@ -167,84 +125,6 @@ export default StudentProfileTab;
 const styles = StyleSheet.create({
   container: {
     gap: 16,
-  },
-  heroSection: {
-    gap: 12,
-  },
-  heroLeft: {
-    gap: 4,
-  },
-  greetingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  greetingTitle: {
-    fontSize: 24,
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
-  matriculaPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.25)',
-  },
-  greenPulse: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#10B981',
-    marginRight: 6,
-  },
-  matriculaPillText: {
-    color: '#10B981',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  schoolSubtitle: {
-    fontSize: 12.5,
-    marginTop: 2,
-  },
-  docButtonsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
-  docBtnOutline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  docBtnOutlineText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  docBtnFilled: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EA580C',
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 14,
-    shadowColor: '#EA580C',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  docBtnFilledText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
   },
   studentCard: {
     borderRadius: 24,
