@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet, Linking, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface AdminSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  currentModule: 'dashboard' | 'create';
-  onSelectModule: (module: 'dashboard' | 'create') => void;
+  currentModule: 'dashboard' | 'create' | 'academic' | 'services' | 'reports';
+  onSelectModule: (module: 'dashboard' | 'create' | 'academic' | 'services' | 'reports') => void;
   onLogout: () => void;
   adminName?: string;
   adminInitial?: string;
@@ -103,24 +103,66 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               {currentModule === 'create' && <View style={styles.orangeDotRight} />}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sidebarMenuItem} onPress={onClose}>
-              <MaterialIcons name="school" size={20} color={theme.textSecondary} style={{ marginRight: 12 }} />
-              <Text style={[styles.sidebarMenuText, { color: theme.textSecondary }]}>Gestión Académica</Text>
+            <TouchableOpacity
+              style={currentModule === 'academic' ? styles.sidebarMenuItemActive : styles.sidebarMenuItem}
+              onPress={() => {
+                onSelectModule('academic');
+                onClose();
+              }}
+            >
+              <MaterialIcons
+                name="school"
+                size={20}
+                color={currentModule === 'academic' ? '#EA580C' : theme.textSecondary}
+                style={{ marginRight: 12 }}
+              />
+              <Text style={currentModule === 'academic' ? styles.sidebarMenuTextActive : [styles.sidebarMenuText, { color: theme.textSecondary }]}>
+                Gestión Académica
+              </Text>
+              {currentModule === 'academic' && <View style={styles.orangeDotRight} />}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sidebarMenuItem} onPress={onClose}>
-              <MaterialIcons name="directions-bus" size={20} color={theme.textSecondary} style={{ marginRight: 12 }} />
-              <Text style={[styles.sidebarMenuText, { color: theme.textSecondary }]}>Servicios Escolares</Text>
+            <TouchableOpacity
+              style={currentModule === 'services' ? styles.sidebarMenuItemActive : styles.sidebarMenuItem}
+              onPress={() => {
+                onSelectModule('services');
+                onClose();
+              }}
+            >
+              <MaterialIcons
+                name="directions-bus"
+                size={20}
+                color={currentModule === 'services' ? '#EA580C' : theme.textSecondary}
+                style={{ marginRight: 12 }}
+              />
+              <Text style={currentModule === 'services' ? styles.sidebarMenuTextActive : [styles.sidebarMenuText, { color: theme.textSecondary }]}>
+                Servicios Escolares
+              </Text>
+              {currentModule === 'services' && <View style={styles.orangeDotRight} />}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sidebarMenuItem} onPress={onClose}>
-              <MaterialIcons name="bar-chart" size={20} color={theme.textSecondary} style={{ marginRight: 12 }} />
-              <Text style={[styles.sidebarMenuText, { color: theme.textSecondary }]}>Centro de Reportes</Text>
+            <TouchableOpacity
+              style={currentModule === 'reports' ? styles.sidebarMenuItemActive : styles.sidebarMenuItem}
+              onPress={() => {
+                onSelectModule('reports');
+                onClose();
+              }}
+            >
+              <MaterialIcons
+                name="bar-chart"
+                size={20}
+                color={currentModule === 'reports' ? '#EA580C' : theme.textSecondary}
+                style={{ marginRight: 12 }}
+              />
+              <Text style={currentModule === 'reports' ? styles.sidebarMenuTextActive : [styles.sidebarMenuText, { color: theme.textSecondary }]}>
+                Centro de Reportes
+              </Text>
+              {currentModule === 'reports' && <View style={styles.orangeDotRight} />}
             </TouchableOpacity>
           </ScrollView>
 
           <View style={[styles.sidebarFooter, { borderTopColor: theme.divider }]}>
-            <TouchableOpacity style={styles.sidebarMenuItem} onPress={onClose}>
+            <TouchableOpacity style={styles.sidebarMenuItem} onPress={() => { onClose(); Linking.openURL('https://educore-systems-web.vercel.app').catch(() => Alert.alert('Error', 'No se pudo abrir el sitio institucional.')); }}>
               <MaterialIcons name="home" size={20} color={theme.textSecondary} style={{ marginRight: 12 }} />
               <Text style={[styles.sidebarMenuText, { color: theme.textSecondary }]}>Sitio Institucional</Text>
             </TouchableOpacity>

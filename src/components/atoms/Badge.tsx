@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
+export type BadgeType = 'nivel' | 'clave' | 'rol' | 'admin-level' | 'curso' | 'profesor' | 'horario-tipo';
+
 interface BadgeProps {
-  type: 'nivel' | 'clave' | 'rol' | 'admin-level';
+  type: BadgeType;
   value?: string;
   isDarkMode?: boolean;
 }
@@ -12,7 +14,7 @@ export const Badge: React.FC<BadgeProps> = ({ type, value = '', isDarkMode = fal
     return (
       <View style={styles.adminLevelBadge}>
         <View style={styles.greenDot} />
-        <Text style={styles.adminLevelText}>Nivel Administrador</Text>
+        <Text style={styles.adminLevelText}>{value || 'Nivel Adm'}</Text>
       </View>
     );
   }
@@ -20,8 +22,59 @@ export const Badge: React.FC<BadgeProps> = ({ type, value = '', isDarkMode = fal
   if (type === 'nivel') {
     const valUpper = (value || 'INICIAL').toUpperCase();
     return (
-      <View style={styles.nivelPill}>
-        <Text style={styles.nivelPillText}>{valUpper}</Text>
+      <View style={[styles.nivelPill, isDarkMode && { backgroundColor: '#334155' }]}>
+        <Text style={[styles.nivelPillText, isDarkMode && { color: '#CBD5E1' }]}>{valUpper}</Text>
+      </View>
+    );
+  }
+
+  if (type === 'curso') {
+    return (
+      <View style={[styles.cursoPill, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+        <Text style={[styles.cursoPillText, isDarkMode && { color: '#93C5FD' }]}>{value || 'Sin curso'}</Text>
+      </View>
+    );
+  }
+
+  if (type === 'profesor') {
+    const isUnassigned = !value || value.toLowerCase().includes('sin asignar');
+    if (isUnassigned) {
+      return (
+        <View style={[styles.sinAsignarPill, isDarkMode && { backgroundColor: '#450A0A', borderColor: '#7F1D1D' }]}>
+          <Text style={[styles.sinAsignarPillText, isDarkMode && { color: '#F87171' }]}>
+            Sin asignar
+          </Text>
+        </View>
+      );
+    }
+    return (
+      <View style={[styles.profesorPill, isDarkMode && { backgroundColor: '#064E3B', borderColor: '#059669' }]}>
+        <Text style={[styles.profesorPillText, isDarkMode && { color: '#6EE7B7' }]}>
+          {value}
+        </Text>
+      </View>
+    );
+  }
+
+  if (type === 'horario-tipo') {
+    const isMateria = value.toLowerCase().includes('materia') || value.toLowerCase() === 'subject';
+    return (
+      <View
+        style={[
+          styles.horarioTipoPill,
+          isMateria ? styles.materiaPill : styles.deportePill,
+          isDarkMode && (isMateria ? { backgroundColor: '#1E1B4B' } : { backgroundColor: '#451A03' }),
+        ]}
+      >
+        <Text
+          style={[
+            styles.horarioTipoText,
+            isMateria ? styles.materiaText : styles.deporteText,
+            isDarkMode && (isMateria ? { color: '#A5B4FC' } : { color: '#FDBA74' }),
+          ]}
+        >
+          {isMateria ? 'MATERIA' : 'DEPORTE'}
+        </Text>
       </View>
     );
   }
@@ -55,87 +108,159 @@ export const Badge: React.FC<BadgeProps> = ({ type, value = '', isDarkMode = fal
   return null;
 };
 
+export default Badge;
+
 const styles = StyleSheet.create({
   adminLevelBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(34, 197, 94, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  greenDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#22C55E',
-    marginRight: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
   },
   adminLevelText: {
-    color: '#22C55E',
-    fontSize: 10,
+    color: '#34D399',
+    fontSize: 12,
     fontWeight: '700',
+    marginLeft: 6,
+  },
+  greenDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
   },
   nivelPill: {
-    backgroundColor: 'rgba(234, 88, 12, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
   },
   nivelPillText: {
-    color: '#EA580C',
-    fontSize: 11,
+    color: '#475569',
+    fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-  greenDotPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#064E3B',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
+  cursoPill: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 9,
+    paddingVertical: 3.5,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    alignSelf: 'flex-start',
   },
-  greenDotText: {
-    color: '#4ADE80',
+  cursoPillText: {
+    color: '#2563EB',
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  profesorPill: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 9,
+    paddingVertical: 3.5,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    alignSelf: 'flex-start',
+  },
+  profesorPillText: {
+    color: '#059669',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  sinAsignarPill: {
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 9,
+    paddingVertical: 3.5,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    alignSelf: 'flex-start',
+  },
+  sinAsignarPillText: {
+    color: '#EF4444',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  horarioTipoPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  materiaPill: {
+    backgroundColor: '#EEF2FF',
+  },
+  deportePill: {
+    backgroundColor: '#FFF7ED',
+  },
+  horarioTipoText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  materiaText: {
+    color: '#4F46E5',
+  },
+  deporteText: {
+    color: '#EA580C',
   },
   amberDotPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#451A03',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  greenDotPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  greenDotText: {
+    fontSize: 11,
+    color: '#34D399',
+    marginLeft: 5,
+    fontWeight: '600',
   },
   roleTagPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
   },
   roleTagAdmin: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
   },
   roleTagDocente: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
   },
   roleTagStaff: {
-    backgroundColor: '#E0E7FF',
+    backgroundColor: 'rgba(100, 116, 139, 0.15)',
   },
   roleTagText: {
     fontSize: 11,
     fontWeight: '700',
   },
   roleTagTextAdmin: {
-    color: '#B91C1C',
+    color: '#818CF8',
   },
   roleTagTextDocente: {
-    color: '#15803D',
+    color: '#34D399',
   },
   roleTagTextStaff: {
-    color: '#4338CA',
+    color: '#94A3B8',
   },
 });
-
-export default Badge;

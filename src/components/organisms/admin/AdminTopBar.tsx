@@ -32,7 +32,7 @@ export const AdminTopBar: React.FC<AdminTopBarProps> = ({
         <View style={styles.logoShield}>
           <MaterialIcons name="admin-panel-settings" size={22} color="#EA580C" />
         </View>
-        <Text style={[styles.topBarTitle, { color: theme.textPrimary }]} numberOfLines={1}>
+        <Text style={[styles.topBarTitle, { color: theme.textPrimary }]} numberOfLines={1} ellipsizeMode="tail">
           Control Administrativo
         </Text>
       </View>
@@ -61,6 +61,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: 6,
   },
   menuButton: {
     padding: 6,

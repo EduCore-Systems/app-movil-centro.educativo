@@ -1,13 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface EmptyStateProps {
+  icon?: string;
   title: string;
   subtitle?: string;
   isDarkMode?: boolean;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
+  icon,
   title,
   subtitle,
   isDarkMode = false,
@@ -17,6 +20,14 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
   return (
     <View style={styles.container}>
+      {icon ? (
+        <MaterialIcons
+          name={icon as any}
+          size={48}
+          color={isDarkMode ? '#475569' : '#CBD5E1'}
+          style={styles.icon}
+        />
+      ) : null}
       <Text style={[styles.title, { color: textPrimary }]}>{title}</Text>
       {subtitle ? <Text style={[styles.subtitle, { color: textSecondary }]}>{subtitle}</Text> : null}
     </View>
@@ -29,6 +40,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 56,
     paddingHorizontal: 20,
+  },
+  icon: {
+    marginBottom: 12,
   },
   title: {
     fontSize: 16,
