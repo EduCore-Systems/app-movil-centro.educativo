@@ -10,7 +10,7 @@ import {
   serverTimestamp,
   increment,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 
 export interface ChatMessage {
   id: string;
@@ -43,27 +43,30 @@ export interface ConversationItem {
 }
 
 /**
- * Mensajes de demostración que replican exactamente la captura del usuario
+ * Conversación de demostración inicial (coincide con la vista oficial web)
  */
 export const DEMO_CONVERSATION: ConversationItem = {
   id: 'demo-matematica',
   studentId: 'martina-diaz',
   studentName: 'Martina Díaz',
-  studentCourse: '1° Año A',
+  studentCourse: '1° Año A (Secundaria)',
   studentDni: '46777888',
   studentLegajo: 'EST-2026-401',
   parentId: 'parent-demo',
   parentName: 'Familia Díaz',
   teacherId: 'teacher-carlos',
   teacherName: 'Prof. Carlos Benítez',
-  teacherEmail: 'carlos.benitez@educore.com',
-  subjectName: 'Matemática',
+  teacherEmail: 'carlos.benitez@educore.edu.ar',
+  subjectName: 'Matemática I',
   lastMessage: 'aguardo su consulta',
-  lastMessageAt: '11:20 a. m.',
   lastSenderRole: 'Docente',
   unreadByParent: 0,
+  unreadByTeacher: 0,
 };
 
+/**
+ * Mensajes iniciales de demostración (idénticos a la captura web del usuario)
+ */
 export const DEMO_MESSAGES: ChatMessage[] = [
   {
     id: 'msg-1',
@@ -108,7 +111,7 @@ export const DEMO_MESSAGES: ChatMessage[] = [
 ];
 
 /**
- * Obtener o crear conversación en Firestore
+ * Busca una conversación existente o crea una nueva entre el tutor y el docente en Firestore.
  */
 export const getOrCreateConversation = async ({
   student,
@@ -121,38 +124,47 @@ export const getOrCreateConversation = async ({
   teacher: any;
   subjectName: string;
 }): Promise<ConversationItem> => {
-  const studentId = student?.id || student?.studentID_login || 'general';
-  const teacherId = teacher.id || 'docente';
+  const currentUid = auth.currentUser?.uid || parentUser?.uid || 'parent-demo';
+  const studentId = student?.id || student?.studentID_login || student?.dni || 'martina-diaz';
+  const teacherId = teacher.id || teacher.uid || teacher.teacherId || 'docente';
   const cleanSubject = subjectName || 'Consulta General';
 
   try {
+    // 1. Buscar si ya existe una conversación abierta para este tutor, alumno y docente/materia
     const q = query(
       collection(db, 'conversations'),
-      where('parentId', '==', parentUser.uid || 'parent-demo'),
+      where('parentId', '==', currentUid),
       where('studentId', '==', studentId)
     );
+
     const snap = await getDocs(q);
-    let existing: ConversationItem | null = null;
+    let existingConv: ConversationItem | null = null;
 
     snap.forEach((d) => {
-      const data = d.data() as ConversationItem;
-      if (data.subjectName === cleanSubject) {
-        existing = { ...(data as any), id: d.id };
+      const data = d.data();
+      if (
+        (data.teacherId === teacherId || data.teacherEmail === teacher.email) &&
+        data.subjectName === cleanSubject
+      ) {
+        existingConv = { ...(data as any), id: d.id };
       }
     });
 
-    if (existing) return existing;
+    if (existingConv) {
+      return existingConv;
+    }
 
-    const newConvData: any = {
+    // 2. Si no existe, crear la nueva conversación con metadata completa
+    const newConvData: Omit<ConversationItem, 'id'> = {
       studentId,
       studentName: student?.nombre || 'Martina Díaz',
-      studentCourse: student?.curso || '1° Año A',
+      studentCourse: student?.curso ? `${student.curso} (${student.nivel || 'Secundaria'})` : '1° Año A (Secundaria)',
       studentDni: student?.dni || '46777888',
-      studentLegajo: student?.studentID_login || 'EST-2026-401',
-      parentId: parentUser.uid || 'parent-demo',
-      parentName: parentUser.nombre || 'Familia Díaz',
+      studentLegajo: student?.studentID_login || studentId,
+      parentId: currentUid,
+      parentName: parentUser?.nombre || (parentUser?.email ? `Familia ${parentUser.email.split('@')[0]}` : 'Familia Díaz'),
       teacherId,
-      teacherName: teacher.name || 'Docente Titular',
+      teacherName: teacher.name || teacher.nombre || 'Docente Titular',
       teacherEmail: teacher.email || '',
       subjectName: cleanSubject,
       lastMessage: 'Consulta iniciada',
@@ -160,34 +172,47 @@ export const getOrCreateConversation = async ({
       lastSenderRole: 'Sistema',
       unreadByTeacher: 0,
       unreadByParent: 0,
-      createdAt: serverTimestamp(),
     };
 
-    const docRef = await addDoc(collection(db, 'conversations'), newConvData);
+    const docRef = await addDoc(collection(db, 'conversations'), {
+      ...newConvData,
+      createdAt: serverTimestamp(),
+    });
+
     return { id: docRef.id, ...newConvData };
   } catch (err) {
-    console.warn('Fallback a conversación local por restricciones de Firestore:', err);
+    console.warn('Error en getOrCreateConversation Firestore, usando fallback local:', err);
     return {
-      id: `local-${Date.now()}`,
+      id: `local-conv-${Date.now()}`,
       studentId,
       studentName: student?.nombre || 'Martina Díaz',
-      parentId: parentUser?.uid || 'parent-demo',
+      studentCourse: '1° Año A (Secundaria)',
+      parentId: currentUid,
       parentName: 'Familia Díaz',
       teacherId,
       teacherName: teacher.name || 'Docente Titular',
       subjectName: cleanSubject,
       lastMessage: 'Consulta iniciada',
+      lastMessageAt: new Date(),
+      lastSenderRole: 'Sistema',
+      unreadByParent: 0,
+      unreadByTeacher: 0,
     };
   }
 };
 
 /**
- * Escucha conversaciones de la familia en tiempo real
+ * Escucha en tiempo real todas las conversaciones de un tutor / familia.
  */
 export const subscribeToFamilyConversations = (
   parentUid: string,
   callback: (convs: ConversationItem[]) => void
 ) => {
+  if (!parentUid) {
+    callback([DEMO_CONVERSATION]);
+    return () => {};
+  }
+
   try {
     const q = query(
       collection(db, 'conversations'),
@@ -202,6 +227,12 @@ export const subscribeToFamilyConversations = (
           id: d.id,
         }));
 
+        convs.sort((a, b) => {
+          const timeA = a.lastMessageAt?.toMillis ? a.lastMessageAt.toMillis() : (a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0);
+          const timeB = b.lastMessageAt?.toMillis ? b.lastMessageAt.toMillis() : (b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0);
+          return timeB - timeA;
+        });
+
         if (convs.length === 0) {
           callback([DEMO_CONVERSATION]);
         } else {
@@ -209,26 +240,60 @@ export const subscribeToFamilyConversations = (
         }
       },
       (err) => {
-        console.warn('Error al consultar Firestore conversations, cargando demo:', err);
+        console.warn('Error al escuchar conversaciones Firestore:', err);
         callback([DEMO_CONVERSATION]);
       }
     );
   } catch (e) {
+    console.warn('Excepción al conectar a Firestore:', e);
     callback([DEMO_CONVERSATION]);
     return () => {};
   }
 };
 
 /**
- * Escucha mensajes en tiempo real
+ * Escucha en tiempo real los mensajes de una conversación.
  */
 export const subscribeToMessages = (
   conversationId: string,
   callback: (msgs: ChatMessage[]) => void
 ) => {
-  if (conversationId === 'demo-matematica' || conversationId.startsWith('local-')) {
+  if (!conversationId) {
     callback(DEMO_MESSAGES);
     return () => {};
+  }
+
+  // Si es la conversación demo local pura y no está en firestore
+  if (conversationId === 'demo-matematica') {
+    // Intentar escuchar si existe en firestore con ese ID; si da error o no existe devolver DEMO_MESSAGES
+    try {
+      const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+      return onSnapshot(
+        messagesRef,
+        (snapshot) => {
+          if (snapshot.empty) {
+            callback(DEMO_MESSAGES);
+          } else {
+            const msgs = snapshot.docs.map((d) => ({
+              ...(d.data() as any),
+              id: d.id,
+            }));
+            msgs.sort((a, b) => {
+              const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+              const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+              return timeA - timeB;
+            });
+            callback(msgs);
+          }
+        },
+        () => {
+          callback(DEMO_MESSAGES);
+        }
+      );
+    } catch {
+      callback(DEMO_MESSAGES);
+      return () => {};
+    }
   }
 
   try {
@@ -240,13 +305,20 @@ export const subscribeToMessages = (
           ...(d.data() as any),
           id: d.id,
         }));
+
         if (msgs.length === 0) {
           callback(DEMO_MESSAGES);
         } else {
+          msgs.sort((a, b) => {
+            const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+            const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+            return timeA - timeB;
+          });
           callback(msgs);
         }
       },
-      () => {
+      (err) => {
+        console.warn('Error al escuchar mensajes en tiempo real:', err);
         callback(DEMO_MESSAGES);
       }
     );
@@ -257,35 +329,69 @@ export const subscribeToMessages = (
 };
 
 /**
- * Enviar mensaje
+ * Enviar mensaje con sincronización Firestore garantizada
  */
 export const sendMessage = async (
   conversationId: string,
-  { senderId, senderName, senderRole, text }: { senderId: string; senderName: string; senderRole: 'Padre' | 'Docente'; text: string }
+  {
+    senderId,
+    senderName,
+    senderRole,
+    text,
+  }: {
+    senderId: string;
+    senderName: string;
+    senderRole: 'Padre' | 'Docente';
+    text: string;
+  }
 ) => {
-  if (!text.trim()) return;
+  if (!text || !text.trim()) return;
 
-  if (conversationId !== 'demo-matematica' && !conversationId.startsWith('local-')) {
-    try {
-      const messagesColRef = collection(db, 'conversations', conversationId, 'messages');
-      const convDocRef = doc(db, 'conversations', conversationId);
+  const cleanText = text.trim();
+  const currentUid = auth.currentUser?.uid || senderId;
 
-      await addDoc(messagesColRef, {
-        senderId,
-        senderName,
-        senderRole,
-        text: text.trim(),
-        createdAt: serverTimestamp(),
-      });
+  // Si es un id local, no podemos escribirlo a Firestore hasta tener doc real
+  if (conversationId.startsWith('local-')) {
+    return;
+  }
 
-      await updateDoc(convDocRef, {
-        lastMessage: text.trim(),
-        lastMessageAt: serverTimestamp(),
-        lastSenderRole: senderRole,
-        unreadByTeacher: increment(1),
-      });
-    } catch (err) {
-      console.warn('Error al guardar mensaje en Firestore:', err);
-    }
+  try {
+    const messagesColRef = collection(db, 'conversations', conversationId, 'messages');
+    const convDocRef = doc(db, 'conversations', conversationId);
+
+    // 1. Guardar mensaje en subcolección
+    await addDoc(messagesColRef, {
+      senderId: currentUid,
+      senderName: senderName || 'TÚ (TUTOR)',
+      senderRole: senderRole || 'Padre',
+      text: cleanText,
+      createdAt: serverTimestamp(),
+      read: false,
+    });
+
+    // 2. Actualizar cabecera de conversación
+    await updateDoc(convDocRef, {
+      lastMessage: cleanText,
+      lastMessageAt: serverTimestamp(),
+      lastSenderRole: senderRole || 'Padre',
+      unreadByTeacher: increment(1),
+    });
+  } catch (err) {
+    console.error('Error al guardar mensaje en Firestore:', err);
+    throw err;
+  }
+};
+
+/**
+ * Marca la conversación como leída para el padre
+ */
+export const markConversationAsRead = async (conversationId: string, readerRole: string = 'Padre') => {
+  if (!conversationId || conversationId.startsWith('local-') || conversationId === 'demo-matematica') return;
+
+  try {
+    const convDocRef = doc(db, 'conversations', conversationId);
+    await updateDoc(convDocRef, { unreadByParent: 0 });
+  } catch (err) {
+    console.warn('Error al marcar conversación como leída:', err);
   }
 };
