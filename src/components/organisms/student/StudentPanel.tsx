@@ -19,7 +19,7 @@ import StudentServicesTab from './StudentServicesTab';
 import FamilyDocumentModal from '../family/FamilyDocumentModal';
 import AttendanceHistoryModal from '../../molecules/family/AttendanceHistoryModal';
 import { getStudentAttendanceHistory, AttendanceRecord } from '../../../services/attendanceService';
-import { getStudentProfile, StudentProfileData, DEFAULT_MATEO_ROSSI } from '../../../services/studentService';
+import { getStudentProfile, StudentProfileData } from '../../../services/studentService';
 import { useAuth } from '../../../context/AuthContext';
 
 interface StudentPanelProps {
@@ -32,7 +32,23 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
   onToggleTheme,
 }) => {
   const { user, logout } = useAuth();
-  const [student, setStudent] = useState<StudentProfileData>(DEFAULTMATEO_ROSSI_RESOLVE(user));
+  const [student, setStudent] = useState<StudentProfileData>({
+    id: user?.uid || '',
+    nombre: user?.nombre || 'Estudiante',
+    dni: user?.dni || '',
+    studentID_login: user?.studentID_login || user?.legajo || '',
+    curso: user?.curso || '1° Año A',
+    nivel: user?.nivel || 'Secundaria',
+    promedio: user?.promedio !== undefined ? user.promedio : 8.8,
+    conducta: user?.conducta || 'Excelente',
+    asistencia: user?.asistencia || '96% Óptima',
+    asistencia_porcentaje: user?.asistencia_porcentaje || 96,
+    deportes: user?.deportes || [],
+    usa_comedor: Boolean(user?.usa_comedor),
+    transporte_recorrido: user?.transporte_recorrido || 'Recorrido Norte (Av. Alvear - Sarmiento)',
+    status: user?.status || 'activo',
+    email: user?.email || '',
+  });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StudentTab>('ficha');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -47,15 +63,6 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
   const [totalClasses, setTotalClasses] = useState(25);
 
   const mainScrollRef = useRef<any>(null);
-
-  function DEFAULTMATEO_ROSSI_RESOLVE(u: any): StudentProfileData {
-    return {
-      ...DEFAULT_MATEO_ROSSI,
-      nombre: u?.nombre || DEFAULT_MATEO_ROSSI.nombre,
-      studentID_login: u?.studentID_login || u?.legajo || DEFAULT_MATEO_ROSSI.studentID_login,
-      dni: u?.dni || DEFAULT_MATEO_ROSSI.dni,
-    };
-  }
 
   useEffect(() => {
     let isMounted = true;
@@ -92,7 +99,7 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
     mainScrollRef.current?.scrollTo({ y: 0, animated: true });
   };
 
-  const firstName = (student.nombre || 'Mateo').split(' ')[0];
+  const firstName = (student.nombre || 'Estudiante').split(' ')[0];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
@@ -185,7 +192,7 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
               <StudentScheduleTab isDarkMode={isDarkMode} />
             )}
 
-            {/* PESTAÑA 4: Servicios y Talleres (Fase 4) */}
+            {/* PESTAÑA 4: Servicios y Talleres */}
             {activeTab === 'servicios' && (
               <StudentServicesTab
                 student={student}

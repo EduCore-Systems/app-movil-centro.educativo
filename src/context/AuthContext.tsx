@@ -41,33 +41,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-const DEFAULT_STUDENT_SESSION: UserProfile = {
-  uid: 'student-mateo-rossi',
-  email: 'mateo.rossi@educore.edu.ar',
-  nombre: 'Mateo Rossi',
-  dni: '46777888',
-  studentID_login: 'test-est-2026-401',
-  legajo: 'test-est-2026-401',
-  curso: '1° Año A',
-  nivel: 'Secundaria',
-  promedio: 8.8,
-  conducta: 'Excelente',
-  asistencia: '96% Óptima',
-  asistencia_porcentaje: 96,
-  role: 'Estudiante',
-  deportes: ['XjMjzVd0XVwv0jJSa24c', '5lW9VLF6xaD7dMILDixr'],
-  usa_comedor: true,
-  transporte_recorrido: 'Recorrido Norte (Av. Alvear - Sarmiento)',
-  status: 'activo',
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Restaurar sesión persistida de alumno si existe
+    // 1. Restaurar sesión persistida de alumno desde AsyncStorage si existe
     const restoreSession = async () => {
       try {
         const saved = await AsyncStorage.getItem('educore_student_session');
@@ -85,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     restoreSession();
 
-    // 2. Escuchar el estado de Firebase Auth en tiempo real
+    // 2. Escuchar el estado de Firebase Auth en tiempo real (Admins y Tutores)
     const unsubscribe = onAuthStateChanged(auth, async (currentFirebaseUser) => {
       setFirebaseUser(currentFirebaseUser);
 
@@ -103,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               role: data.role || 'Padre',
             });
           } else {
+            // Verificar si el UID existe en la colección 'students' de Firestore
             const studentDocRef = doc(db, 'students', currentFirebaseUser.uid);
             const studentDocSnap = await getDoc(studentDocRef);
             if (studentDocSnap.exists()) {
@@ -158,85 +139,90 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cleanId = (identifier || '').trim();
     const cleanPass = (pass || '').trim();
 
-    // Detección de formato estudiante: EST-*, test-est-*, DNI numérico, o email/usuario de estudiante
+    if (!cleanId || !cleanPass) {
+      return { success: false, error: 'Por favor, completa todos los campos.' };
+    }
+
+    // ── 1. DETECCIÓN DE FORMATO ALUMNO (LEGAJO O DNI) ──
     const isStudentFormat =
       cleanId.toUpperCase().startsWith('EST-') ||
       cleanId.toUpperCase().startsWith('TEST-') ||
       /^\d{7,9}$/.test(cleanId) ||
-      cleanId.toLowerCase().includes('estudiante') ||
-      cleanId.toLowerCase().includes('mateo') ||
-      cleanId.toLowerCase().includes('alumno') ||
-      cleanId.toLowerCase() === 'mateo.rossi@educore.edu.ar';
+      !cleanId.includes('@');
 
     if (isStudentFormat) {
       try {
-        let studentProfile: UserProfile;
+        let studentData: any = null;
 
-        // Si el identificador es EST-2026-401 o Mateo, es el perfil oficial de Mateo Rossi (igual que en la web)
-        if (
-          cleanId.toUpperCase().includes('401') ||
-          cleanId.toLowerCase().includes('mateo') ||
-          cleanId.toLowerCase().includes('rossi')
-        ) {
-          studentProfile = {
-            ...DEFAULT_STUDENT_SESSION,
-            studentID_login: cleanId.toUpperCase().startsWith('EST-') ? cleanId : DEFAULT_STUDENT_SESSION.studentID_login,
-            dni: /^\d+$/.test(cleanId) ? cleanId : DEFAULT_STUDENT_SESSION.dni,
-          };
+        // A. Consultar en Firestore por studentID_login (ej. EST-2026-401)
+        const q1 = query(collection(db, 'students'), where('studentID_login', '==', cleanId));
+        const qSnap1 = await getDocs(q1);
+        if (!qSnap1.empty) {
+          studentData = { id: qSnap1.docs[0].id, ...qSnap1.docs[0].data() };
         } else {
-          // Intentar localizar en Firestore para otros estudiantes
-          let studentData: any = null;
-          try {
-            const isDni = /^\d+$/.test(cleanId);
-            const fieldToQuery = isDni ? 'dni' : 'studentID_login';
-            const q = query(collection(db, 'students'), where(fieldToQuery, '==', cleanId));
-            const qSnap = await getDocs(q);
-            if (!qSnap.empty) {
-              studentData = { id: qSnap.docs[0].id, ...qSnap.docs[0].data() };
-            }
-          } catch (dbErr) {
-            console.warn('Consulta a colección students en Firestore:', dbErr);
+          // B. Consultar en Firestore por DNI (ej. 46777888)
+          const q2 = query(collection(db, 'students'), where('dni', '==', cleanId));
+          const qSnap2 = await getDocs(q2);
+          if (!qSnap2.empty) {
+            studentData = { id: qSnap2.docs[0].id, ...qSnap2.docs[0].data() };
           }
-
-          studentProfile = studentData
-            ? {
-                uid: studentData.id,
-                email: studentData.email || `${cleanId.toLowerCase()}@educore.edu.ar`,
-                nombre: studentData.nombre,
-                dni: studentData.dni || cleanId,
-                studentID_login: studentData.studentID_login || cleanId,
-                legajo: studentData.studentID_login || cleanId,
-                curso: studentData.curso || '1° Año A',
-                nivel: studentData.nivel || 'Secundaria',
-                promedio: studentData.promedio !== undefined ? studentData.promedio : 8.8,
-                conducta: studentData.conducta || 'Excelente',
-                asistencia: studentData.asistencia || '96% Óptima',
-                asistencia_porcentaje: studentData.asistencia_porcentaje || 96,
-                role: 'Estudiante',
-                deportes: Array.isArray(studentData.deportes) ? studentData.deportes : ['XjMjzVd0XVwv0jJSa24c', '5lW9VLF6xaD7dMILDixr'],
-                usa_comedor: studentData.usa_comedor !== undefined ? Boolean(studentData.usa_comedor) : true,
-                transporte_recorrido: studentData.transporte_recorrido || 'Recorrido Norte (Av. Alvear - Sarmiento)',
-                status: studentData.status || 'activo',
-              }
-            : {
-                ...DEFAULT_STUDENT_SESSION,
-                studentID_login: cleanId.toUpperCase().startsWith('EST-') ? cleanId : DEFAULT_STUDENT_SESSION.studentID_login,
-                dni: /^\d+$/.test(cleanId) ? cleanId : DEFAULT_STUDENT_SESSION.dni,
-              };
         }
+
+        // Si NO existe en la base de datos Firestore, denegar acceso inmediatamente (cero mocks)
+        if (!studentData) {
+          return {
+            success: false,
+            error: 'No se encontró ningún estudiante registrado con ese Legajo o DNI en la base de datos.',
+          };
+        }
+
+        // C. Validación de clave con la base de datos (clave asignada o DNI institucional)
+        const validPassword = String(studentData.password || studentData.clave || studentData.dni || '');
+        if (validPassword && cleanPass !== validPassword) {
+          return {
+            success: false,
+            error: 'Contraseña incorrecta. Recordá que tu clave inicial de alumno es tu DNI.',
+          };
+        }
+
+        // D. Construir perfil 100% DINÁMICO a partir de Firestore
+        const nivel = studentData.nivel
+          ? studentData.nivel.charAt(0).toUpperCase() + studentData.nivel.slice(1).toLowerCase()
+          : 'Secundaria';
+
+        const studentProfile: UserProfile = {
+          uid: studentData.id,
+          email: studentData.email || `${studentData.studentID_login?.toLowerCase() || 'estudiante'}@educore.edu.ar`,
+          nombre: studentData.nombre,
+          dni: studentData.dni,
+          studentID_login: studentData.studentID_login,
+          legajo: studentData.studentID_login,
+          curso: studentData.curso || '1° Año A',
+          nivel,
+          promedio: studentData.promedio !== undefined ? studentData.promedio : 8.8,
+          conducta: studentData.conducta || 'Excelente',
+          asistencia: studentData.asistencia || '96% Óptima',
+          asistencia_porcentaje: studentData.asistencia_porcentaje || 96,
+          role: 'Estudiante',
+          deportes: Array.isArray(studentData.deportes) ? studentData.deportes : [],
+          usa_comedor: studentData.usa_comedor !== undefined ? Boolean(studentData.usa_comedor) : false,
+          transporte_recorrido: studentData.transporte_recorrido || 'Recorrido Norte (Av. Alvear - Sarmiento)',
+          status: studentData.status || 'activo',
+        };
 
         await AsyncStorage.setItem('educore_student_session', JSON.stringify(studentProfile));
         setUser(studentProfile);
         return { success: true };
       } catch (err: any) {
-        console.warn('Error en login de alumno:', err);
-        await AsyncStorage.setItem('educore_student_session', JSON.stringify(DEFAULT_STUDENT_SESSION));
-        setUser(DEFAULT_STUDENT_SESSION);
-        return { success: true };
+        console.warn('Error consultando estudiante en Firestore:', err);
+        return {
+          success: false,
+          error: 'Error de conexión con la base de datos al validar el estudiante.',
+        };
       }
     }
 
-    // Login general con Email y Contraseña (Admin o Tutor)
+    // ── 2. LOGIN DE USUARIOS CON CORREO (ADMIN O PADRES/TUTORES) ──
     try {
       const userCredential = await signInWithEmailAndPassword(auth, cleanId, cleanPass);
       const uid = userCredential.user.uid;
@@ -265,19 +251,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await AsyncStorage.removeItem('educore_student_session');
       return { success: true };
     } catch (err: any) {
-      if (cleanId.includes('estudiante') || cleanId.includes('alumno') || cleanId.includes('mateo')) {
-        await AsyncStorage.setItem('educore_student_session', JSON.stringify(DEFAULT_STUDENT_SESSION));
-        setUser(DEFAULT_STUDENT_SESSION);
-        return { success: true };
-      }
-
       let message = 'Error al iniciar sesión.';
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
         message = 'Correo electrónico o contraseña incorrectos.';
       } else if (err.code === 'auth/invalid-email') {
         message = 'Formato de correo o credencial no válido.';
       } else if (err.code === 'auth/user-not-found') {
-        message = 'No existe una cuenta registrada con este usuario.';
+        message = 'No existe una cuenta registrada con este usuario en la base de datos.';
       } else if (err.code === 'auth/too-many-requests') {
         message = 'Demasiados intentos fallidos. Intenta más tarde.';
       }

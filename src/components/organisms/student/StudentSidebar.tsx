@@ -36,6 +36,17 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
     activePillBg: '#EA580C',
   };
 
+  const getInitials = (name?: string): string => {
+    if (!name) return 'AL';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  const initials = getInitials(student.nombre);
+
   const navMenuItems: {
     id: StudentTab;
     label: string;
@@ -72,7 +83,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
           {/* ── 2. TARJETA DE PERFIL DEL ALUMNO ── */}
           <View style={[styles.studentCardBox, { borderBottomColor: theme.divider }]}>
             <View style={styles.studentAvatar}>
-              <Text style={styles.studentAvatarText}>MR</Text>
+              <Text style={styles.studentAvatarText}>{initials}</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.studentName, { color: theme.textPrimary }]} numberOfLines={1}>
@@ -82,7 +93,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 {student.curso} · {student.nivel}
               </Text>
               <View style={styles.legajoPill}>
-                <Text style={styles.legajoPillText}>Legajo: {student.studentID_login || 'EST-2026-401'}</Text>
+                <Text style={styles.legajoPillText}>Legajo: {student.studentID_login || 'S/D'}</Text>
               </View>
             </View>
           </View>

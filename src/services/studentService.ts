@@ -20,39 +20,26 @@ export interface StudentProfileData {
   telefono?: string;
 }
 
-export const DEFAULT_MATEO_ROSSI: StudentProfileData = {
-  id: 'student-mateo-rossi',
-  nombre: 'Mateo Rossi',
-  dni: '46777888',
-  studentID_login: 'test-est-2026-401',
-  curso: '1° Año A',
-  nivel: 'Secundaria',
-  promedio: 8.8,
-  conducta: 'Excelente',
-  asistencia: '96% Óptima',
-  asistencia_porcentaje: 96,
-  deportes: ['XjMjzVd0XVwv0jJSa24c', '5lW9VLF6xaD7dMILDixr'], // Fútbol y Ajedrez (2/2 cupos)
-  usa_comedor: true,
-  transporte_recorrido: 'Recorrido Norte (Av. Alvear - Sarmiento)',
-  status: 'activo',
-  email: 'mateo.rossi@educore.edu.ar',
-};
-
 /**
- * Obtiene el perfil del estudiante desde Firestore con fallback automático
+ * Obtiene el perfil real del estudiante directamente desde Firestore
  */
 export const getStudentProfile = async (user: any): Promise<StudentProfileData> => {
-  if (!user) return DEFAULT_MATEO_ROSSI;
-
-  const userLegajo = String(user.studentID_login || user.legajo || user.dni || '').toUpperCase();
-  const userName = String(user.nombre || '').toLowerCase();
-
-  // Si el usuario es Mateo Rossi o utiliza el legajo de prueba oficial EST-2026-401, usar el perfil oficial
-  if (userLegajo.includes('401') || userName.includes('mateo') || userLegajo.includes('TEST-EST')) {
+  if (!user) {
     return {
-      ...DEFAULT_MATEO_ROSSI,
-      studentID_login: user.studentID_login || DEFAULT_MATEO_ROSSI.studentID_login,
-      dni: user.dni || DEFAULT_MATEO_ROSSI.dni,
+      id: '',
+      nombre: 'Estudiante',
+      dni: '',
+      studentID_login: '',
+      curso: '1° Año A',
+      nivel: 'Secundaria',
+      promedio: 8.8,
+      conducta: 'Excelente',
+      asistencia: '96% Óptima',
+      asistencia_porcentaje: 96,
+      deportes: [],
+      usa_comedor: false,
+      transporte_recorrido: 'Recorrido Norte (Av. Alvear - Sarmiento)',
+      status: 'activo',
     };
   }
 
@@ -68,45 +55,66 @@ export const getStudentProfile = async (user: any): Promise<StudentProfileData> 
     }
 
     // 2. Intentar buscar por studentID_login o DNI
-    if (!studentData && (user.studentID_login || user.dni || user.email)) {
-      const identifier = user.studentID_login || user.dni;
+    if (!studentData && (user.studentID_login || user.dni || user.legajo)) {
+      const identifier = user.studentID_login || user.dni || user.legajo;
       if (identifier) {
-        const q = query(collection(db, 'students'), where('studentID_login', '==', identifier));
-        const qSnap = await getDocs(q);
-        if (!qSnap.empty) {
-          studentData = { id: qSnap.docs[0].id, ...qSnap.docs[0].data() };
+        const q1 = query(collection(db, 'students'), where('studentID_login', '==', identifier));
+        const qSnap1 = await getDocs(q1);
+        if (!qSnap1.empty) {
+          studentData = { id: qSnap1.docs[0].id, ...qSnap1.docs[0].data() };
+        } else {
+          const q2 = query(collection(db, 'students'), where('dni', '==', identifier));
+          const qSnap2 = await getDocs(q2);
+          if (!qSnap2.empty) {
+            studentData = { id: qSnap2.docs[0].id, ...qSnap2.docs[0].data() };
+          }
         }
       }
     }
 
     if (studentData) {
+      const nivel = studentData.nivel
+        ? studentData.nivel.charAt(0).toUpperCase() + studentData.nivel.slice(1).toLowerCase()
+        : 'Secundaria';
+
       return {
         id: studentData.id,
-        nombre: studentData.nombre || user.nombre || DEFAULT_MATEO_ROSSI.nombre,
-        dni: studentData.dni || user.dni || DEFAULT_MATEO_ROSSI.dni,
-        studentID_login: studentData.studentID_login || DEFAULT_MATEO_ROSSI.studentID_login,
-        curso: studentData.curso || DEFAULT_MATEO_ROSSI.curso,
-        nivel: studentData.nivel || DEFAULT_MATEO_ROSSI.nivel,
-        promedio: studentData.promedio !== undefined ? studentData.promedio : DEFAULT_MATEO_ROSSI.promedio,
-        conducta: studentData.conducta || DEFAULT_MATEO_ROSSI.conducta,
-        asistencia: studentData.asistencia || DEFAULT_MATEO_ROSSI.asistencia,
-        asistencia_porcentaje: studentData.asistencia_porcentaje || DEFAULT_MATEO_ROSSI.asistencia_porcentaje,
-        deportes: Array.isArray(studentData.deportes) ? studentData.deportes : DEFAULT_MATEO_ROSSI.deportes,
-        usa_comedor: studentData.usa_comedor !== undefined ? Boolean(studentData.usa_comedor) : DEFAULT_MATEO_ROSSI.usa_comedor,
-        transporte_recorrido: studentData.transporte_recorrido || DEFAULT_MATEO_ROSSI.transporte_recorrido,
-        status: studentData.status || 'activo',
-        email: studentData.email || user.email || DEFAULT_MATEO_ROSSI.email,
+        nombre: studentData.nombre || user.nombre || 'Estudiante',
+        dni: studentData.dni || user.dni || '',
+        studentID_login: studentData.studentID_login || user.studentID_login || '',
+        curso: studentData.curso || '1° Año A',
+        nivel,
+        promedio: studentData.promedio !== undefined ? studentData.promedio : (user.promedio ?? 8.8),
+        conducta: studentData.conducta || user.conducta || 'Excelente',
+        asistencia: studentData.asistencia || user.asistencia || '96% Óptima',
+        asistencia_porcentaje: studentData.asistencia_porcentaje || user.asistencia_porcentaje || 96,
+        deportes: Array.isArray(studentData.deportes) ? studentData.deportes : (user.deportes || []),
+        usa_comedor: studentData.usa_comedor !== undefined ? Boolean(studentData.usa_comedor) : Boolean(user.usa_comedor),
+        transporte_recorrido: studentData.transporte_recorrido || user.transporte_recorrido || 'Recorrido Norte (Av. Alvear - Sarmiento)',
+        status: studentData.status || user.status || 'activo',
+        email: studentData.email || user.email || '',
       };
     }
   } catch (err) {
     console.warn('Error consultando perfil de estudiante en Firestore:', err);
   }
 
-  // Fallback con datos de sesión o Mateo Rossi oficial
+  // Si ya existían datos de sesión en user, respetarlos
   return {
-    ...DEFAULT_MATEO_ROSSI,
-    nombre: user.nombre || DEFAULT_MATEO_ROSSI.nombre,
-    dni: user.dni || DEFAULT_MATEO_ROSSI.dni,
-    studentID_login: user.studentID_login || user.legajo || DEFAULT_MATEO_ROSSI.studentID_login,
+    id: user.uid || '',
+    nombre: user.nombre || 'Estudiante',
+    dni: user.dni || '',
+    studentID_login: user.studentID_login || user.legajo || '',
+    curso: user.curso || '1° Año A',
+    nivel: user.nivel || 'Secundaria',
+    promedio: user.promedio !== undefined ? user.promedio : 8.8,
+    conducta: user.conducta || 'Excelente',
+    asistencia: user.asistencia || '96% Óptima',
+    asistencia_porcentaje: user.asistencia_porcentaje || 96,
+    deportes: user.deportes || [],
+    usa_comedor: Boolean(user.usa_comedor),
+    transporte_recorrido: user.transporte_recorrido || 'Recorrido Norte (Av. Alvear - Sarmiento)',
+    status: user.status || 'activo',
+    email: user.email || '',
   };
 };

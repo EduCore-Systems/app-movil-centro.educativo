@@ -22,15 +22,27 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
     pillCardBg: isDarkMode ? '#1E293B' : '#F8FAFC',
   };
 
+  // Calcular iniciales dinámicamente según el nombre del alumno (ej. Martina Díaz -> MD, Mateo Rossi -> MR)
+  const getInitials = (name?: string): string => {
+    if (!name) return 'AL';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  const initials = getInitials(student.nombre);
+
   return (
     <View style={styles.container}>
-      {/* ── TARJETA PRINCIPAL DEL ALUMNO (MR - MATEO ROSSI) ── */}
+      {/* ── TARJETA PRINCIPAL DEL ALUMNO DESDE FIRESTORE ── */}
       <View style={[styles.studentCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
         <View style={styles.cardHeaderRow}>
-          {/* Avatar MR con punto verde */}
+          {/* Avatar con iniciales dinámicas y punto verde activo */}
           <View style={styles.avatarContainer}>
             <View style={styles.avatarBox}>
-              <Text style={styles.avatarText}>MR</Text>
+              <Text style={styles.avatarText}>{initials}</Text>
             </View>
             <View style={styles.avatarStatusGreen} />
           </View>
@@ -41,7 +53,9 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
                 {student.nombre}
               </Text>
               <View style={styles.activeBadge}>
-                <Text style={styles.activeBadgeText}>ACTIVO</Text>
+                <Text style={styles.activeBadgeText}>
+                  {(student.status || 'ACTIVO').toUpperCase()}
+                </Text>
               </View>
             </View>
 
@@ -60,7 +74,7 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
             <MaterialIcons name="badge" size={14} color="#64748B" style={{ marginRight: 4 }} />
             <Text style={styles.metaLabelText}>Legajo: </Text>
             <Text style={[styles.metaValueText, { color: theme.titleColor }]}>
-              {student.studentID_login}
+              {student.studentID_login || 'S/D'}
             </Text>
           </View>
 
@@ -68,7 +82,7 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
             <MaterialIcons name="fingerprint" size={14} color="#64748B" style={{ marginRight: 4 }} />
             <Text style={styles.metaLabelText}>DNI: </Text>
             <Text style={[styles.metaValueText, { color: theme.titleColor }]}>
-              {student.dni}
+              {student.dni || 'S/D'}
             </Text>
           </View>
 
@@ -92,8 +106,12 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
               <MaterialIcons name="visibility" size={14} color="#64748B" />
             </View>
             <View style={styles.metricValueRow}>
-              <Text style={[styles.metricMainNumber, { color: theme.titleColor }]}>96%</Text>
-              <Text style={styles.metricStatusGreen}>Óptima</Text>
+              <Text style={[styles.metricMainNumber, { color: theme.titleColor }]}>
+                {student.asistencia_porcentaje || 96}%
+              </Text>
+              <Text style={styles.metricStatusGreen}>
+                {student.asistencia?.split(' ')[1] || 'Óptima'}
+              </Text>
             </View>
           </TouchableOpacity>
 
@@ -101,7 +119,7 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
           <View style={[styles.metricCard, { backgroundColor: theme.pillCardBg }]}>
             <Text style={styles.metricTitle}>PROMEDIO</Text>
             <View style={styles.metricValueRow}>
-              <Text style={styles.metricAverageOrange}>8.8</Text>
+              <Text style={styles.metricAverageOrange}>{student.promedio || '8.8'}</Text>
               <Text style={styles.metricSubTotal}> /10</Text>
             </View>
           </View>
@@ -110,7 +128,9 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
           <View style={[styles.metricCard, { backgroundColor: theme.pillCardBg }]}>
             <Text style={styles.metricTitle}>CONDUCTA</Text>
             <View style={styles.metricValueRow}>
-              <Text style={[styles.metricConductText, { color: theme.titleColor }]}>Excelente</Text>
+              <Text style={[styles.metricConductText, { color: theme.titleColor }]}>
+                {student.conducta || 'Excelente'}
+              </Text>
               <MaterialIcons name="check-circle" size={16} color="#10B981" style={{ marginLeft: 4 }} />
             </View>
           </View>
