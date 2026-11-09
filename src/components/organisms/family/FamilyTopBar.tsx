@@ -34,28 +34,28 @@ export const FamilyTopBar: React.FC<FamilyTopBarProps> = ({
       {/* Izquierda: Menú Hamburguesa + Título Portal Familiar */}
       <View style={styles.leftSection}>
         <TouchableOpacity onPress={onOpenSidebar} style={styles.menuButton}>
-          <Ionicons name="menu" size={26} color={theme.textPrimary} />
+          <Ionicons name="menu" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
         <View style={styles.brandBox}>
-          <MaterialIcons name="family-restroom" size={22} color="#EA580C" style={{ marginRight: 6 }} />
+          <MaterialIcons name="family-restroom" size={20} color="#EA580C" style={{ marginRight: 5 }} />
           <Text style={[styles.brandText, { color: theme.textPrimary }]} numberOfLines={1}>
             Portal Familiar
           </Text>
         </View>
       </View>
 
-      {/* Derecha: Badge Ciclo 2026 + ThemeToggle + Divider + Avatar + Nombre */}
+      {/* Derecha: Badge Ciclo 26 Activo + ThemeToggle + Divider + Avatar + Nombre */}
       <View style={styles.rightSection}>
-        {/* Pastilla Ciclo Activo */}
+        {/* Pastilla Ciclo Activo abreviada a "Ciclo 26 Activo" para evitar superposición */}
         <View style={[styles.cycleBadge, { backgroundColor: theme.badgeBg, borderColor: theme.badgeBorder }]}>
           <View style={styles.pulseDot} />
-          <Text style={[styles.cycleText, { color: theme.badgeText }]}>Ciclo 2026 Activo</Text>
+          <Text style={[styles.cycleText, { color: theme.badgeText }]}>Ciclo 26 Activo</Text>
         </View>
 
         {/* Alternador de Tema */}
         <ThemeToggle isDarkMode={isDarkMode} onToggle={onToggleTheme} />
 
-        {/* Divisor vertical */}
+        {/* Divisor vertical sutil */}
         <View style={[styles.dividerVertical, { backgroundColor: theme.divider }]} />
 
         {/* Avatar del Tutor + Nombre */}
@@ -79,18 +79,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
   },
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    marginRight: 6,
+    flexShrink: 1,
+    marginRight: 4,
   },
   menuButton: {
-    padding: 6,
+    padding: 4,
     marginRight: 4,
   },
   brandBox: {
@@ -98,48 +98,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   brandText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
   },
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+    flexShrink: 0,
   },
   cycleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3.5,
     borderRadius: 20,
     borderWidth: 1,
   },
   pulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: '#10B981',
-    marginRight: 5,
+    marginRight: 4,
   },
   cycleText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '800',
-    letterSpacing: 0.4,
+    letterSpacing: 0.2,
   },
   dividerVertical: {
     width: 1,
-    height: 20,
-    marginHorizontal: 2,
+    height: 18,
+    marginHorizontal: 1,
   },
   tutorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   avatarBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#EA580C',
     justifyContent: 'center',
     alignItems: 'center',
@@ -147,10 +148,11 @@ const styles = StyleSheet.create({
   avatarText: {
     color: '#FFFFFF',
     fontWeight: '800',
-    fontSize: 14,
+    fontSize: 13,
   },
   tutorNameText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '700',
+    maxWidth: 85,
   },
 });

@@ -51,6 +51,7 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [usaComedor, setUsaComedor] = useState(false);
   const [transporteRecorrido, setTransporteRecorrido] = useState<string>('none');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -107,6 +108,14 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
   const hasChanges = sportsChanged || comedorChanged || transportChanged;
   const isLimitReached = selectedSports.length >= 2;
 
+  // Estado real de transporte (Pendiente / Confirmado / Sin servicio)
+  const isTransportActive = Boolean(transporteRecorrido && transporteRecorrido !== 'none');
+  const isTransportConfirmed = student?.transporte_estado === 'confirmado';
+
+  // Estado real de comedor (Pendiente / Confirmado / Inactivo)
+  const isDiningActive = Boolean(usaComedor);
+  const isDiningConfirmed = student?.comedor_estado === 'confirmado';
+
   // Guardar en Firestore
   const handleSaveChanges = async () => {
     if (!student?.id) return;
@@ -119,12 +128,28 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
       const routeName = selectedRouteObj ? selectedRouteObj.nombre : (transporteRecorrido === 'none' ? 'Sin servicio' : transporteRecorrido);
       const routeId = transporteRecorrido === 'none' ? null : (selectedRouteObj ? selectedRouteObj.id : transporteRecorrido);
 
+      const isRouteDiff = (routeId || null) !== (student?.transportRouteId || null);
+      const nuevoTransporteEstado = !routeId
+        ? 'sin_servicio'
+        : isRouteDiff
+        ? 'pendiente_confirmacion'
+        : (student?.transporte_estado || 'pendiente_confirmacion');
+
+      const isDiningDiff = Boolean(usaComedor) !== Boolean(student?.diningRoomEnabled || student?.usa_comedor);
+      const nuevoComedorEstado = !usaComedor
+        ? 'sin_servicio'
+        : isDiningDiff
+        ? 'pendiente_confirmacion'
+        : (student?.comedor_estado || 'pendiente_confirmacion');
+
       const updateData = {
         deportes: selectedSports,
         usa_comedor: usaComedor,
         diningRoomEnabled: usaComedor,
         transporte_recorrido: routeName,
         transportRouteId: routeId,
+        transporte_estado: nuevoTransporteEstado,
+        comedor_estado: nuevoComedorEstado,
         servicios_ultima_solicitud: new Date().toISOString(),
       };
 
@@ -158,11 +183,14 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
     boxBg: isDarkMode ? '#0F172A' : '#F8FAFC',
   };
 
+  const selectedRouteLabel =
+    RUTAS_TRANSPORTE.find((r) => r.id === transporteRecorrido)?.nombre || 'No utiliza servicio de transporte';
+
   return (
     <View style={styles.container}>
       {/* ── CABECERA ── */}
       <View style={styles.headerRow}>
-        <View>
+        <View style={{ flex: 1, marginRight: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <MaterialIcons name="sports-soccer" size={22} color="#EA580C" style={{ marginRight: 6 }} />
             <Text style={[styles.sectionTitle, { color: theme.titleColor }]}>
@@ -263,7 +291,8 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
       {/* ── SECCIÓN 2: TRANSPORTE ESCOLAR (RF-17) ── */}
       <View style={[styles.serviceCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
         <View style={styles.cardHeader}>
-          <View style={[styles.iconCircle, { backgroundColor: 'rgba(2, 132, 199, 0.12)' }]}>
+          {/* Ícono 100% redondo */}
+          <View style={[styles.iconCircleRound, { backgroundColor: 'rgba(2, 132, 199, 0.12)' }]}>
             <MaterialIcons name="directions-bus" size={20} color="#0284C7" />
           </View>
           <View style={{ flex: 1, marginLeft: 10 }}>
@@ -275,47 +304,98 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
             </Text>
           </View>
 
-          {transporteRecorrido !== 'none' ? (
-            <View style={styles.confirmedPill}>
-              <View style={styles.greenDot} />
-              <Text style={styles.confirmedText}>Confirmado</Text>
-            </View>
+          {/* Estado de Transporte: Confirmado / Solicitud Pendiente / Sin servicio */}
+          {isTransportActive ? (
+            isTransportConfirmed ? (
+              <View style={styles.confirmedPill}>
+                <View style={styles.greenDot} />
+                <Text style={styles.confirmedText}>Confirmado</Text>
+              </View>
+            ) : (
+              <View style={styles.pendingPill}>
+                <View style={styles.amberDot} />
+                <Text style={styles.pendingText}>Solicitud Pendiente</Text>
+              </View>
+            )
           ) : (
-            <View style={[styles.noServicePill, { backgroundColor: theme.boxBg }]}>
+            <View style={[styles.noServicePill, { backgroundColor: theme.boxBg, borderColor: theme.border }]}>
               <Text style={[styles.noServiceText, { color: theme.subColor }]}>Sin servicio</Text>
             </View>
           )}
         </View>
 
-        {/* Opciones de Recorrido */}
+        {/* Desplegable interactivo para elegir el recorrido */}
         <Text style={[styles.fieldLabel, { color: theme.subColor }]}>RECORRIDO ASIGNADO</Text>
-        <View style={styles.routeSelector}>
-          {RUTAS_TRANSPORTE.map((ruta) => {
-            const isSelected = transporteRecorrido === ruta.id;
-            return (
-              <TouchableOpacity
-                key={ruta.id}
-                onPress={() => setTransporteRecorrido(ruta.id)}
-                style={[
-                  styles.routeOption,
-                  {
-                    backgroundColor: isSelected ? theme.selectedBg : theme.boxBg,
-                    borderColor: isSelected ? theme.selectedBorder : theme.border,
-                  },
-                ]}
-                activeOpacity={0.8}
-              >
-                <MaterialIcons
-                  name={isSelected ? 'radio-button-checked' : 'radio-button-unchecked'}
-                  size={18}
-                  color={isSelected ? '#EA580C' : theme.subColor}
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={[styles.routeText, { color: theme.titleColor }]}>{ruta.nombre}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        
+        <TouchableOpacity
+          onPress={() => setIsDropdownOpen((prev) => !prev)}
+          style={[
+            styles.dropdownTrigger,
+            {
+              backgroundColor: theme.boxBg,
+              borderColor: isDropdownOpen ? '#EA580C' : theme.border,
+            },
+          ]}
+          activeOpacity={0.8}
+        >
+          <View style={styles.dropdownLeft}>
+            <MaterialIcons
+              name="directions-bus"
+              size={18}
+              color={transporteRecorrido !== 'none' ? '#EA580C' : theme.subColor}
+              style={{ marginRight: 8 }}
+            />
+            <Text style={[styles.dropdownSelectedText, { color: theme.titleColor }]} numberOfLines={1}>
+              {selectedRouteLabel}
+            </Text>
+          </View>
+          <MaterialIcons
+            name={isDropdownOpen ? 'expand-less' : 'expand-more'}
+            size={22}
+            color={theme.subColor}
+          />
+        </TouchableOpacity>
+
+        {/* Opciones desplegables */}
+        {isDropdownOpen && (
+          <View style={[styles.dropdownMenu, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+            {RUTAS_TRANSPORTE.map((ruta) => {
+              const isSelected = transporteRecorrido === ruta.id;
+              return (
+                <TouchableOpacity
+                  key={ruta.id}
+                  onPress={() => {
+                    setTransporteRecorrido(ruta.id);
+                    setIsDropdownOpen(false);
+                  }}
+                  style={[
+                    styles.dropdownItem,
+                    isSelected && { backgroundColor: theme.selectedBg },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <MaterialIcons
+                    name={isSelected ? 'check-circle' : 'radio-button-unchecked'}
+                    size={18}
+                    color={isSelected ? '#EA580C' : theme.subColor}
+                    style={{ marginRight: 10 }}
+                  />
+                  <Text
+                    style={[
+                      styles.dropdownItemText,
+                      {
+                        color: isSelected ? '#EA580C' : theme.titleColor,
+                        fontWeight: isSelected ? '700' : '500',
+                      },
+                    ]}
+                  >
+                    {ruta.nombre}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
 
         {transporteRecorrido !== 'none' && (
           <View style={styles.transportDetailBox}>
@@ -332,7 +412,8 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
       {/* ── SECCIÓN 3: COMEDOR ESCOLAR (RF-17) ── */}
       <View style={[styles.serviceCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
         <View style={styles.cardHeader}>
-          <View style={[styles.iconCircle, { backgroundColor: 'rgba(217, 119, 6, 0.12)' }]}>
+          {/* Ícono 100% redondo */}
+          <View style={[styles.iconCircleRound, { backgroundColor: 'rgba(217, 119, 6, 0.12)' }]}>
             <MaterialIcons name="restaurant" size={20} color="#D97706" />
           </View>
           <View style={{ flex: 1, marginLeft: 10 }}>
@@ -344,12 +425,32 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
             </Text>
           </View>
 
-          <Switch
-            value={usaComedor}
-            onValueChange={setUsaComedor}
-            trackColor={{ false: theme.border, true: '#EA580C' }}
-            thumbColor="#FFFFFF"
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {isDiningActive ? (
+              isDiningConfirmed ? (
+                <View style={styles.confirmedPill}>
+                  <View style={styles.greenDot} />
+                  <Text style={styles.confirmedText}>Confirmado</Text>
+                </View>
+              ) : (
+                <View style={styles.pendingPill}>
+                  <View style={styles.amberDot} />
+                  <Text style={styles.pendingText}>Solicitud Pendiente</Text>
+                </View>
+              )
+            ) : (
+              <View style={[styles.noServicePill, { backgroundColor: theme.boxBg, borderColor: theme.border }]}>
+                <Text style={[styles.noServiceText, { color: theme.subColor }]}>Inactivo</Text>
+              </View>
+            )}
+
+            <Switch
+              value={usaComedor}
+              onValueChange={setUsaComedor}
+              trackColor={{ false: theme.border, true: '#EA580C' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
         </View>
 
         <View style={[styles.diningInfoBox, { backgroundColor: usaComedor ? 'rgba(217, 119, 6, 0.08)' : theme.boxBg }]}>
@@ -371,30 +472,32 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
         </View>
       </View>
 
-      {/* ── BOTÓN GUARDAR MODIFICACIONES ── */}
-      <TouchableOpacity
-        onPress={handleSaveChanges}
-        disabled={!hasChanges || isSaving}
-        style={[
-          styles.saveBtn,
-          {
-            backgroundColor: hasChanges ? '#EA580C' : (isDarkMode ? '#334155' : '#CBD5E1'),
-            opacity: hasChanges && !isSaving ? 1 : 0.6,
-          },
-        ]}
-        activeOpacity={0.8}
-      >
-        {isSaving ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
-        ) : (
-          <>
-            <MaterialIcons name={hasChanges ? 'save' : 'check'} size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.saveBtnText}>
-              {hasChanges ? 'Guardar Modificaciones' : 'Sin cambios pendientes'}
-            </Text>
-          </>
-        )}
-      </TouchableOpacity>
+      {/* ── BOTÓN GUARDAR MODIFICACIONES (Con margen inferior amplio) ── */}
+      <View style={styles.saveBtnContainer}>
+        <TouchableOpacity
+          onPress={handleSaveChanges}
+          disabled={!hasChanges || isSaving}
+          style={[
+            styles.saveBtn,
+            {
+              backgroundColor: hasChanges ? '#EA580C' : (isDarkMode ? '#334155' : '#CBD5E1'),
+              opacity: hasChanges && !isSaving ? 1 : 0.6,
+            },
+          ]}
+          activeOpacity={0.8}
+        >
+          {isSaving ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
+              <MaterialIcons name={hasChanges ? 'save' : 'check'} size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.saveBtnText}>
+                {hasChanges ? 'Guardar Modificaciones' : 'Sin cambios pendientes'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -451,10 +554,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+  // Contorno 100% redondo
+  iconCircleRound: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -563,10 +667,33 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
   },
+  pendingPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+  },
+  amberDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#F59E0B',
+    marginRight: 4,
+  },
+  pendingText: {
+    color: '#D97706',
+    fontSize: 10,
+    fontWeight: '800',
+  },
   noServicePill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
+    borderWidth: 1,
   },
   noServiceText: {
     fontSize: 10,
@@ -578,20 +705,41 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 8,
   },
-  routeSelector: {
-    gap: 6,
-  },
-  routeOption: {
+  dropdownTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    borderRadius: 12,
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
     borderWidth: 1,
   },
-  routeText: {
-    fontSize: 12,
-    fontWeight: '600',
+  dropdownLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+    marginRight: 8,
+  },
+  dropdownSelectedText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  dropdownMenu: {
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 6,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(148, 163, 184, 0.15)',
+  },
+  dropdownItemText: {
+    fontSize: 12.5,
   },
   transportDetailBox: {
     marginTop: 10,
@@ -633,13 +781,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 4,
   },
+  saveBtnContainer: {
+    paddingTop: 10,
+    paddingBottom: 30,
+  },
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 16,
-    marginTop: 6,
     shadowColor: '#EA580C',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,

@@ -182,7 +182,8 @@ export const StudentSubjectsTab: React.FC<StudentSubjectsTabProps> = ({
               >
                 {/* Cabecera de la materia */}
                 <View style={styles.cardHeader}>
-                  <View style={[styles.iconCircle, { backgroundColor: styleInfo.bg }]}>
+                  {/* Ícono 100% redondo */}
+                  <View style={[styles.iconCircleRound, { backgroundColor: styleInfo.bg }]}>
                     <MaterialIcons name={styleInfo.icon} size={22} color={styleInfo.color} />
                   </View>
 
@@ -298,10 +299,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  iconCircle: {
+  // Contorno 100% redondo
+  iconCircleRound: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

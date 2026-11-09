@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -41,6 +41,10 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
+  // Referencias para auto-scroll suave
+  const mainScrollRef = useRef<any>(null);
+  const childrenScrollRef = useRef<any>(null);
+
   const tutorName = user?.nombre || user?.name || (user?.email ? `Familia ${user.email.split('@')[0]}` : 'Familia Díaz');
 
   const loadChildren = async () => {
@@ -72,6 +76,24 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
     setChildren((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
   };
 
+  // Al seleccionar un hijo: auto-scroll horizontal para que la tarjeta no quede cortada a la mitad
+  const handleSelectChild = (child: FamilyStudent, index: number) => {
+    setSelectedStudent(child);
+    childrenScrollRef.current?.scrollTo({
+      x: index * 260,
+      animated: true,
+    });
+  };
+
+  // Al cambiar de pestaña: scroll para centrar el contenido y ver botones completos
+  const handleSelectTab = (tab: FamilyTab) => {
+    setActiveTab(tab);
+    mainScrollRef.current?.scrollTo({
+      y: 220,
+      animated: true,
+    });
+  };
+
   const theme = {
     bg: isDarkMode ? '#0A0F1D' : '#F8FAFC',
     cardBg: isDarkMode ? '#1E293B' : '#FFFFFF',
@@ -91,6 +113,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
       />
 
       <ScrollView
+        ref={mainScrollRef}
         style={styles.contentScroll}
         contentContainerStyle={styles.scrollContentContainer}
         showsVerticalScrollIndicator={false}
@@ -155,16 +178,18 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
         ) : (
           <View style={styles.childrenSection}>
             <ScrollView
+              ref={childrenScrollRef}
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.childrenCardsRow}
+              decelerationRate="fast"
             >
-              {children.map((child) => (
+              {children.map((child, idx) => (
                 <FamilyStudentCard
                   key={child.id}
                   student={child}
                   isSelected={selectedStudent?.id === child.id}
-                  onSelect={() => setSelectedStudent(child)}
+                  onSelect={() => handleSelectChild(child, idx)}
                   isDarkMode={isDarkMode}
                 />
               ))}
@@ -198,7 +223,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
             {/* Píldoras de Navegación Modular */}
             <FamilyNavTabs
               activeTab={activeTab}
-              onSelectTab={setActiveTab}
+              onSelectTab={handleSelectTab}
               isDarkMode={isDarkMode}
             />
 
@@ -213,7 +238,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
                 student={selectedStudent}
                 isDarkMode={isDarkMode}
                 onOpenChatWithTeacher={(subject) => {
-                  setActiveTab('chat');
+                  handleSelectTab('chat');
                 }}
               />
             )}
@@ -245,7 +270,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={handleSelectTab}
         onLogout={logout}
         tutorName={tutorName}
         childrenCount={children.length}
@@ -277,7 +302,7 @@ const styles = StyleSheet.create({
   },
   scrollContentContainer: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 100, // Margen inferior amplio para que ningún botón quede cortado a media pantalla
   },
   headerBanner: {
     marginBottom: 20,

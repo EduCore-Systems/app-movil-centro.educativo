@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -15,12 +15,23 @@ export const FamilyNavTabs: React.FC<FamilyNavTabsProps> = ({
   onSelectTab,
   isDarkMode = false,
 }) => {
+  const tabsScrollRef = useRef<any>(null);
+
   const tabs: { key: FamilyTab; label: string; icon: keyof typeof MaterialIcons.glyphMap }[] = [
     { key: 'resumen', label: 'Ficha del Estudiante', icon: 'badge' },
     { key: 'materias', label: 'Materias y Docentes', icon: 'menu-book' },
-    { key: 'servicios', label: 'Servicios Escolares', icon: 'settings' },
+    { key: 'servicios', label: 'Servicios Escolares', icon: 'sports-soccer' },
     { key: 'chat', label: 'Consultas con Docentes', icon: 'chat' },
   ];
+
+  const handleTabPress = (tabKey: FamilyTab, index: number) => {
+    onSelectTab(tabKey);
+    // Auto-scroll horizontal para que la píldora activa se vea completa y centrada
+    tabsScrollRef.current?.scrollTo({
+      x: Math.max(0, index * 125 - 20),
+      animated: true,
+    });
+  };
 
   const theme = {
     barBg: isDarkMode ? '#1E293B50' : '#F1F5F9',
@@ -30,13 +41,18 @@ export const FamilyNavTabs: React.FC<FamilyNavTabsProps> = ({
 
   return (
     <View style={[styles.container, { backgroundColor: theme.barBg, borderColor: theme.barBorder }]}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {tabs.map((tab) => {
+      <ScrollView
+        ref={tabsScrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {tabs.map((tab, idx) => {
           const isActive = activeTab === tab.key;
           return (
             <TouchableOpacity
               key={tab.key}
-              onPress={() => onSelectTab(tab.key)}
+              onPress={() => handleTabPress(tab.key, idx)}
               style={[
                 styles.tabPill,
                 isActive && styles.tabPillActive,
@@ -73,7 +89,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 1,
     padding: 6,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   scrollContent: {
     flexDirection: 'row',
