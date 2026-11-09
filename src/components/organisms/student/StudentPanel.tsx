@@ -14,6 +14,7 @@ import StudentSidebar from './StudentSidebar';
 import StudentNavTabs, { StudentTab } from '../../molecules/student/StudentNavTabs';
 import StudentProfileTab from './StudentProfileTab';
 import StudentSubjectsTab from './StudentSubjectsTab';
+import StudentScheduleTab from './StudentScheduleTab';
 import FamilyDocumentModal from '../family/FamilyDocumentModal';
 import AttendanceHistoryModal from '../../molecules/family/AttendanceHistoryModal';
 import { getStudentAttendanceHistory, AttendanceRecord } from '../../../services/attendanceService';
@@ -85,7 +86,7 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      {/* ── TOPBAR DEL ESTUDIANTE (SIN PÍLDORA CICLO) ── */}
+      {/* ── TOPBAR DEL ESTUDIANTE ── */}
       <StudentTopBar
         isDarkMode={isDarkMode}
         onOpenSidebar={() => setIsSidebarOpen(true)}
@@ -164,21 +165,14 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
               />
             )}
 
-            {/* PESTAÑA 2: Mis Asignaturas (Fase 2) */}
+            {/* PESTAÑA 2: Mis Asignaturas */}
             {activeTab === 'materias' && (
               <StudentSubjectsTab isDarkMode={isDarkMode} />
             )}
 
             {/* PESTAÑA 3: Horario Semanal (Fase 3) */}
             {activeTab === 'horario' && (
-              <View style={[styles.placeholderCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-                <Text style={[styles.placeholderTitle, { color: theme.titleColor }]}>
-                  Horario Semanal
-                </Text>
-                <Text style={[styles.placeholderSub, { color: theme.subColor }]}>
-                  Fase 3: Selector de Lunes a Viernes con cronograma oficial de clases y talleres.
-                </Text>
-              </View>
+              <StudentScheduleTab isDarkMode={isDarkMode} />
             )}
 
             {/* PESTAÑA 4: Servicios y Talleres (Fase 4) */}

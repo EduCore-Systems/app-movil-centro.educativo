@@ -107,7 +107,6 @@ export const StudentSubjectsTab: React.FC<StudentSubjectsTabProps> = ({
           setSubjects(fetched.slice(0, 5));
         }
       } catch (e) {
-        // Fallback a los 5 oficiales si Firestore está restringido
         if (isMounted) setSubjects(DEFAULT_OFFICIAL_SUBJECTS);
       }
     };
@@ -156,9 +155,9 @@ export const StudentSubjectsTab: React.FC<StudentSubjectsTabProps> = ({
               { backgroundColor: theme.cardBg, borderColor: theme.border },
             ]}
           >
-            {/* Fila Superior: Ícono, Nombre, Docente y Badge "En curso" */}
+            {/* Fila Superior: Ícono REDONDO, Nombre, Docente y Badge "En curso" */}
             <View style={styles.cardTopRow}>
-              <View style={[styles.iconBox, { backgroundColor: item.iconBg }]}>
+              <View style={[styles.iconBoxRound, { backgroundColor: item.iconBg }]}>
                 <MaterialIcons name={item.icon} size={22} color={item.iconColor} />
               </View>
 
@@ -247,10 +246,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  iconBox: {
+  iconBoxRound: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: 22, // Forma redonda circular
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
