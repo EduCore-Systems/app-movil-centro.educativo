@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Text,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import StudentTopBar from './StudentTopBar';
@@ -19,7 +20,11 @@ import StudentServicesTab from './StudentServicesTab';
 import FamilyDocumentModal from '../family/FamilyDocumentModal';
 import AttendanceHistoryModal from '../../molecules/family/AttendanceHistoryModal';
 import { getStudentAttendanceHistory, AttendanceRecord } from '../../../services/attendanceService';
-import { getStudentProfile, StudentProfileData } from '../../../services/studentService';
+import {
+  getStudentProfile,
+  subscribeStudentProfile,
+  StudentProfileData,
+} from '../../../services/studentService';
 import { useAuth } from '../../../context/AuthContext';
 
 interface StudentPanelProps {
@@ -61,30 +66,44 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [totalClasses, setTotalClasses] = useState(25);
+  const [refreshing, setRefreshing] = useState(false);
 
   const mainScrollRef = useRef<any>(null);
 
+  // Suscripción en tiempo real al perfil del estudiante desde Firestore
   useEffect(() => {
-    let isMounted = true;
-    const fetchStudent = async () => {
-      setLoading(true);
+    setLoading(true);
+    const unsubscribe = subscribeStudentProfile(user, async (updatedData) => {
+      setStudent(updatedData);
+      setLoading(false);
       try {
-        const data = await getStudentProfile(user);
-        if (isMounted) setStudent(data);
-        const attData = await getStudentAttendanceHistory(data.id, data.dni);
-        if (isMounted) {
-          setAttendanceRecords(attData.history || []);
-          if (attData.totalClasses) setTotalClasses(attData.totalClasses);
-        }
-      } catch (err) {
-        console.warn('Error cargando perfil del estudiante:', err);
-      } finally {
-        if (isMounted) setLoading(false);
+        const attData = await getStudentAttendanceHistory(updatedData.id, updatedData.dni);
+        setAttendanceRecords(attData.history || []);
+        if (attData.totalClasses) setTotalClasses(attData.totalClasses);
+      } catch (e) {
+        console.warn('Error cargando historial de asistencia:', e);
       }
+    });
+
+    return () => {
+      unsubscribe();
     };
-    fetchStudent();
-    return () => { isMounted = false; };
   }, [user]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const data = await getStudentProfile(user);
+      setStudent(data);
+      const attData = await getStudentAttendanceHistory(data.id, data.dni);
+      setAttendanceRecords(attData.history || []);
+      if (attData.totalClasses) setTotalClasses(attData.totalClasses);
+    } catch (e) {
+      console.warn('Error refrescando perfil de estudiante:', e);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const theme = {
     bg: isDarkMode ? '#0A0F1D' : '#F8FAFC',
@@ -116,6 +135,14 @@ export const StudentPanel: React.FC<StudentPanelProps> = ({
         style={styles.contentScroll}
         contentContainerStyle={styles.scrollContentContainer}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#EA580C"
+            colors={['#EA580C']}
+          />
+        }
       >
         {/* ── HERO SALUDO Y BOTONES CONSTANCIAS (PERSISTENTES ARRIBA) ── */}
         <View style={styles.heroSection}>
