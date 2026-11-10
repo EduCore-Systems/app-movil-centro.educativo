@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   Keyboard,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import FamilyTopBar from './FamilyTopBar';
@@ -22,7 +23,12 @@ import StudentServicesTab from './StudentServicesTab';
 import FamilyTuitionTab from './FamilyTuitionTab';
 import FamilyChatTab from './FamilyChatTab';
 import FamilyDocumentModal from './FamilyDocumentModal';
-import { getChildrenForParent, FamilyStudent } from '../../../services/familyService';
+import {
+  getChildrenForParent,
+  subscribeChildrenForParent,
+  subscribeStudentById,
+  FamilyStudent,
+} from '../../../services/familyService';
 import { useAuth } from '../../../context/AuthContext';
 
 interface FamilyPanelProps {
@@ -48,6 +54,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
     isOpen: false,
     type: 'boletin',
   });
+  const [refreshing, setRefreshing] = useState(false);
 
   // Referencias para auto-scroll suave
   const mainScrollRef = useRef<any>(null);
@@ -55,24 +62,62 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
 
   const tutorName = user?.nombre || user?.name || (user?.email ? `Familia ${user.email.split('@')[0]}` : 'Familia Díaz');
 
-  const loadChildren = async () => {
+  // 1. Suscripción en tiempo real a la nómina de hijos del tutor
+  useEffect(() => {
     setLoading(true);
+    const unsubscribe = subscribeChildrenForParent(user?.uid, user?.email, (data) => {
+      setChildren(data);
+      setLoading(false);
+      setSelectedStudent((current) => {
+        if (!current && data.length > 0) return data[0];
+        if (current) {
+          const match = data.find((s) => s.id === current.id);
+          return match || (data.length > 0 ? data[0] : null);
+        }
+        return null;
+      });
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [user?.uid, user?.email]);
+
+  // 2. Suscripción puntual en tiempo real al estudiante seleccionado (cambios de servicios, estado, etc.)
+  useEffect(() => {
+    if (!selectedStudent?.id) return;
+
+    const unsubscribe = subscribeStudentById(selectedStudent.id, (updated) => {
+      setSelectedStudent((prev) => (prev ? { ...prev, ...updated } : updated));
+      setChildren((prev) =>
+        prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c))
+      );
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [selectedStudent?.id]);
+
+  // Soporte para recarga manual (Pull to Refresh)
+  const handleRefresh = async () => {
+    setRefreshing(true);
     try {
       const data = await getChildrenForParent(user?.uid, user?.email);
       setChildren(data);
       if (data.length > 0) {
-        setSelectedStudent(data[0]);
+        setSelectedStudent((current) => {
+          if (!current) return data[0];
+          const match = data.find((s) => s.id === current.id);
+          return match || data[0];
+        });
       }
     } catch (err) {
-      console.error('Error al cargar hijos:', err);
+      console.warn('Error al refrescar manualmente hijos:', err);
     } finally {
-      setLoading(false);
+      setRefreshing(false);
     }
   };
-
-  useEffect(() => {
-    loadChildren();
-  }, [user?.uid]);
 
   // Soporte para elevar y hacer scroll cuando el teclado se despliega
   useEffect(() => {
@@ -153,6 +198,14 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#EA580C"
+            colors={['#EA580C']}
+          />
+        }
       >
         {/* ── CABECERA DEL PORTAL ── */}
         <View style={styles.headerBanner}>
@@ -272,7 +325,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
               <StudentProfileTab student={selectedStudent} isDarkMode={isDarkMode} />
             )}
 
-            {/* 2. Materias y Docentes (Fase 2) */}
+            {/* 2. Materias y Docentes (Módulo 2) */}
             {activeTab === 'materias' && (
               <StudentSubjectsTab
                 student={selectedStudent}
@@ -283,7 +336,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
               />
             )}
 
-            {/* 3. Servicios Escolares (Fase 2) */}
+            {/* 3. Servicios Escolares (Módulo 2) */}
             {activeTab === 'servicios' && (
               <StudentServicesTab
                 student={selectedStudent}
@@ -302,7 +355,7 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
               />
             )}
 
-            {/* 5. Consultas con Docentes (Fase 3 - Sincronizado en tiempo real) */}
+            {/* 5. Consultas con Docentes (Módulo 3 - Sincronizado en tiempo real) */}
             {activeTab === 'chat' && (
               <FamilyChatTab
                 student={selectedStudent}
