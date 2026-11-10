@@ -250,6 +250,30 @@ const ROSTER_SECUNDARIA_1RO_A: TeacherStudentItem[] = [
   STUDENT_CAMILA_LOPEZ,
 ];
 
+// ── TALLERES Y DEPORTES EXTRACURRICULARES OFICIALES ──
+export const DEFAULT_TEACHER_SPORTS = [
+  {
+    id: 'sp-fut-1',
+    name: 'Entrenamiento de Fútbol Institucional',
+    description: 'Espacio de formación técnica, acondicionamiento físico y trabajo en equipo para alumnos del nivel medio.',
+    schedule: 'Lunes 16:00-17:30 · Jueves 16:00-17:30',
+    schedules: [
+      { dayOfWeek: 'Lunes', startTime: '16:00', endTime: '17:30' },
+      { dayOfWeek: 'Jueves', startTime: '16:00', endTime: '17:30' },
+    ],
+  },
+  {
+    id: 'sp-rob-1',
+    name: 'Taller de Robótica y Programación',
+    description: 'Laboratorio de diseño, armado de prototipos y pensamiento computacional orientado a proyectos institucionales.',
+    schedule: 'Lunes 17:00-18:30 · Miércoles 17:00-18:30',
+    schedules: [
+      { dayOfWeek: 'Lunes', startTime: '17:00', endTime: '18:30' },
+      { dayOfWeek: 'Miércoles', startTime: '17:00', endTime: '18:30' },
+    ],
+  },
+];
+
 // ── 16 MATERIAS OFICIALES ACTIVAS DEL PORTAL DOCENTE ──
 export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
   // 1. Secundaria - 1° Año A
@@ -261,6 +285,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '1° Año A',
     courseLevel: 'secundaria',
     schedule: 'Viernes 09:30-11:00 · Miércoles 09:30-11:00',
+    schedules: [
+      { dayOfWeek: 'Miércoles', startTime: '09:30', endTime: '11:00' },
+      { dayOfWeek: 'Viernes', startTime: '09:30', endTime: '11:00' },
+    ],
     studentsCount: ROSTER_SECUNDARIA_1RO_A.length,
     students: ROSTER_SECUNDARIA_1RO_A,
   },
@@ -273,6 +301,9 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: 'Sala de 5 A',
     courseLevel: 'inicial',
     schedule: 'Viernes 09:00-10:30',
+    schedules: [
+      { dayOfWeek: 'Viernes', startTime: '09:00', endTime: '10:30' },
+    ],
     studentsCount: ROSTER_INICIAL_SALA_5A.length,
     students: ROSTER_INICIAL_SALA_5A,
   },
@@ -285,6 +316,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: 'Sala de 5 A',
     courseLevel: 'inicial',
     schedule: 'Jueves 09:00–10:15 · Martes 09:00–10:15',
+    schedules: [
+      { dayOfWeek: 'Martes', startTime: '09:00', endTime: '10:15' },
+      { dayOfWeek: 'Jueves', startTime: '09:00', endTime: '10:15' },
+    ],
     studentsCount: ROSTER_INICIAL_SALA_5A.length,
     students: ROSTER_INICIAL_SALA_5A,
   },
@@ -297,6 +332,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: 'Sala de 5 A',
     courseLevel: 'inicial',
     schedule: 'Lunes 10:30-11:30 · Miércoles 10:30-11:30',
+    schedules: [
+      { dayOfWeek: 'Lunes', startTime: '10:30', endTime: '11:30' },
+      { dayOfWeek: 'Miércoles', startTime: '10:30', endTime: '11:30' },
+    ],
     studentsCount: ROSTER_INICIAL_SALA_5A.length,
     students: ROSTER_INICIAL_SALA_5A,
   },
@@ -309,6 +348,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: 'Sala de 5 A',
     courseLevel: 'inicial',
     schedule: 'Lunes 09:00-10:15 · Miércoles 09:00-10:15',
+    schedules: [
+      { dayOfWeek: 'Lunes', startTime: '09:00', endTime: '10:15' },
+      { dayOfWeek: 'Miércoles', startTime: '09:00', endTime: '10:15' },
+    ],
     studentsCount: ROSTER_INICIAL_SALA_5A.length,
     students: ROSTER_INICIAL_SALA_5A,
   },
@@ -321,6 +364,11 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '4° Grado A',
     courseLevel: 'primaria',
     schedule: 'Lunes y Miércoles 08:00 a 09:30',
+    schedules: [
+      { dayOfWeek: 'Lunes', startTime: '07:45', endTime: '09:15' },
+      { dayOfWeek: 'Miércoles', startTime: '07:45', endTime: '09:15' },
+      { dayOfWeek: 'Viernes', startTime: '07:45', endTime: '09:15' },
+    ],
     studentsCount: ROSTER_PRIMARIA_4TO_A.length,
     students: ROSTER_PRIMARIA_4TO_A,
   },
@@ -333,6 +381,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '4° Grado A',
     courseLevel: 'primaria',
     schedule: 'Martes y Jueves 08:00 a 09:30',
+    schedules: [
+      { dayOfWeek: 'Martes', startTime: '07:45', endTime: '09:15' },
+      { dayOfWeek: 'Jueves', startTime: '07:45', endTime: '09:15' },
+    ],
     studentsCount: ROSTER_PRIMARIA_4TO_A.length,
     students: ROSTER_PRIMARIA_4TO_A,
   },
@@ -345,6 +397,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '4° Grado A',
     courseLevel: 'primaria',
     schedule: 'Miércoles y Viernes 09:30 a 11:00',
+    schedules: [
+      { dayOfWeek: 'Miércoles', startTime: '09:30', endTime: '11:00' },
+      { dayOfWeek: 'Viernes', startTime: '09:30', endTime: '11:00' },
+    ],
     studentsCount: ROSTER_PRIMARIA_4TO_A.length,
     students: ROSTER_PRIMARIA_4TO_A,
   },
@@ -357,6 +413,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '4° Grado A',
     courseLevel: 'primaria',
     schedule: 'Lunes y Jueves 11:15 a 12:45',
+    schedules: [
+      { dayOfWeek: 'Lunes', startTime: '11:15', endTime: '12:45' },
+      { dayOfWeek: 'Jueves', startTime: '11:15', endTime: '12:45' },
+    ],
     studentsCount: ROSTER_PRIMARIA_4TO_A.length,
     students: ROSTER_PRIMARIA_4TO_A,
   },
@@ -369,6 +429,9 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '4° Grado A',
     courseLevel: 'primaria',
     schedule: 'Martes 11:15 a 12:45',
+    schedules: [
+      { dayOfWeek: 'Martes', startTime: '11:15', endTime: '12:45' },
+    ],
     studentsCount: ROSTER_PRIMARIA_4TO_A.length,
     students: ROSTER_PRIMARIA_4TO_A,
   },
@@ -381,6 +444,11 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '1° Año A',
     courseLevel: 'secundaria',
     schedule: 'Lunes y Miércoles 07:45 a 09:15',
+    schedules: [
+      { dayOfWeek: 'Lunes', startTime: '07:45', endTime: '09:15' },
+      { dayOfWeek: 'Miércoles', startTime: '07:45', endTime: '09:15' },
+      { dayOfWeek: 'Viernes', startTime: '07:45', endTime: '09:15' },
+    ],
     studentsCount: ROSTER_SECUNDARIA_1RO_A.length,
     students: ROSTER_SECUNDARIA_1RO_A,
   },
@@ -393,6 +461,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '1° Año A',
     courseLevel: 'secundaria',
     schedule: 'Martes y Jueves 07:45 a 09:15',
+    schedules: [
+      { dayOfWeek: 'Martes', startTime: '07:45', endTime: '09:15' },
+      { dayOfWeek: 'Jueves', startTime: '07:45', endTime: '09:15' },
+    ],
     studentsCount: ROSTER_SECUNDARIA_1RO_A.length,
     students: ROSTER_SECUNDARIA_1RO_A,
   },
@@ -405,6 +477,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '1° Año A',
     courseLevel: 'secundaria',
     schedule: 'Lunes y Jueves 09:30 a 11:00',
+    schedules: [
+      { dayOfWeek: 'Lunes', startTime: '09:30', endTime: '11:00' },
+      { dayOfWeek: 'Jueves', startTime: '09:30', endTime: '11:00' },
+    ],
     studentsCount: ROSTER_SECUNDARIA_1RO_A.length,
     students: ROSTER_SECUNDARIA_1RO_A,
   },
@@ -417,6 +493,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '1° Año A',
     courseLevel: 'secundaria',
     schedule: 'Miércoles y Viernes 11:15 a 12:45',
+    schedules: [
+      { dayOfWeek: 'Miércoles', startTime: '11:15', endTime: '12:45' },
+      { dayOfWeek: 'Viernes', startTime: '11:15', endTime: '12:45' },
+    ],
     studentsCount: ROSTER_SECUNDARIA_1RO_A.length,
     students: ROSTER_SECUNDARIA_1RO_A,
   },
@@ -429,6 +509,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '1° Año A',
     courseLevel: 'secundaria',
     schedule: 'Martes 09:30 a 11:00 · Viernes 07:45 a 09:15',
+    schedules: [
+      { dayOfWeek: 'Martes', startTime: '09:30', endTime: '11:00' },
+      { dayOfWeek: 'Viernes', startTime: '07:45', endTime: '09:15' },
+    ],
     studentsCount: ROSTER_SECUNDARIA_1RO_A.length,
     students: ROSTER_SECUNDARIA_1RO_A,
   },
@@ -441,6 +525,10 @@ export const DEFAULT_TEACHER_SUBJECTS: TeacherCourseSubject[] = [
     courseName: '1° Año A',
     courseLevel: 'secundaria',
     schedule: 'Jueves 11:15 a 12:45 · Viernes 11:15 a 12:45',
+    schedules: [
+      { dayOfWeek: 'Jueves', startTime: '11:15', endTime: '12:45' },
+      { dayOfWeek: 'Viernes', startTime: '11:15', endTime: '12:45' },
+    ],
     studentsCount: ROSTER_SECUNDARIA_1RO_A.length,
     students: ROSTER_SECUNDARIA_1RO_A,
   },
@@ -564,13 +652,13 @@ export const getTeacherAcademicData = async (user?: any): Promise<TeacherAcademi
 
   return {
     subjects: DEFAULT_TEACHER_SUBJECTS,
-    sports: [],
+    sports: DEFAULT_TEACHER_SPORTS,
     courses: [],
     schedules: [],
     students: uniqueStudents,
     totalStudentsCount: uniqueStudents.length, // Exactamente 11 alumnos únicos
     subjectsCount: DEFAULT_TEACHER_SUBJECTS.length, // Exactamente 16 materias
-    sportsCount: 0,
+    sportsCount: DEFAULT_TEACHER_SPORTS.length,
   };
 };
 

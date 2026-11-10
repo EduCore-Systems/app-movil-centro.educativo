@@ -13,6 +13,7 @@ import TeacherNavTabs, { TeacherTab } from '../../molecules/teacher/TeacherNavTa
 import TeacherCoursesTab from './TeacherCoursesTab';
 import { TeacherAttendanceTab } from './TeacherAttendanceTab';
 import { TeacherMessagesTab } from './TeacherMessagesTab';
+import { TeacherScheduleTab } from './TeacherScheduleTab';
 import {
   TeacherCourseSubject,
   TeacherProfileData,
@@ -37,6 +38,7 @@ export const TeacherPanel: React.FC<TeacherPanelProps> = ({
     email: user?.email || DEFAULT_TEACHER.email,
   });
   const [subjects, setSubjects] = useState<TeacherCourseSubject[]>([]);
+  const [sports, setSports] = useState<any[]>([]);
   const [sportsCount, setSportsCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TeacherTab>('cursos');
@@ -53,6 +55,7 @@ export const TeacherPanel: React.FC<TeacherPanelProps> = ({
         const academicData = await getTeacherAcademicData(user);
         if (isMounted) {
           setSubjects(academicData.subjects);
+          setSports(academicData.sports || []);
           setSportsCount(academicData.sportsCount);
           if (user?.nombre) {
             setTeacher(prev => ({
@@ -155,14 +158,11 @@ export const TeacherPanel: React.FC<TeacherPanelProps> = ({
 
             {/* PESTAÑA 4: Mi Cronograma Semanal (Fase 4) */}
             {activeTab === 'horario' && (
-              <View style={[styles.placeholderCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-                <Text style={[styles.placeholderTitle, { color: theme.titleColor }]}>
-                  Mi Cronograma Semanal
-                </Text>
-                <Text style={[styles.placeholderSub, { color: theme.subColor }]}>
-                  Fase 4: Horarios lectivos coordinados por día y bloques horarios.
-                </Text>
-              </View>
+              <TeacherScheduleTab
+                subjects={subjects}
+                sports={sports}
+                isDarkMode={isDarkMode}
+              />
             )}
 
             {/* PESTAÑA 5: Deportes y Talleres (Fase 5) */}
