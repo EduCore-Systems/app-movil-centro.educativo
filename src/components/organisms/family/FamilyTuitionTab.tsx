@@ -352,15 +352,30 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
       if (Platform.OS === 'web') {
         await Print.printAsync({ html: htmlContent });
       } else {
-        const isShareAvailable = await Sharing.isAvailableAsync();
-        const { uri } = await Print.printToFileAsync({ html: htmlContent });
-        if (isShareAvailable) {
-          await Sharing.shareAsync(uri, {
-            UTI: '.pdf',
-            mimeType: 'application/pdf',
-            dialogTitle: `Recibo_EduCore_${receiptCode}.pdf`,
-          });
-        } else {
+        // En Android / iOS:
+        let sharedSuccessfully = false;
+        try {
+          const isShareAvailable = await Sharing.isAvailableAsync();
+          if (isShareAvailable) {
+            const { uri } = await Print.printToFileAsync({ html: htmlContent });
+            let targetUri = uri;
+            if (!targetUri.startsWith('file://')) {
+              targetUri = `file://${targetUri}`;
+            }
+            await Sharing.shareAsync(targetUri, {
+              UTI: '.pdf',
+              mimeType: 'application/pdf',
+              dialogTitle: `Recibo_EduCore_${receiptCode}.pdf`,
+            });
+            sharedSuccessfully = true;
+          }
+        } catch (shareErr) {
+          console.warn('Sharing no disponible o restringido por FileProvider en Android, abriendo PrintManager nativo:', shareErr);
+        }
+
+        // Si Sharing no está permitido o falló en el sandbox de Expo Go,
+        // invocar Print.printAsync() que abre el diálogo nativo del sistema para "Guardar como PDF"
+        if (!sharedSuccessfully) {
           await Print.printAsync({ html: htmlContent });
         }
       }
