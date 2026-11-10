@@ -6,7 +6,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
 
-// Import Organisms
+// Import Organisms Admin
 import AdminTopBar from '../components/organisms/admin/AdminTopBar';
 import AdminSidebar from '../components/organisms/admin/AdminSidebar';
 import AdminDashboardTab from '../components/organisms/admin/AdminDashboardTab';
@@ -15,15 +15,46 @@ import AdminAcademicTab from '../components/organisms/admin/AdminAcademicTab';
 import AdminServicesTab from '../components/organisms/admin/AdminServicesTab';
 import AdminReportsTab from '../components/organisms/admin/AdminReportsTab';
 
+// Import Organism Family Portal
+import FamilyPanel from '../components/organisms/family/FamilyPanel';
+
 // Import Types
 import { Student } from '../components/molecules/StudentCard';
 import { Staff } from '../components/molecules/StaffCard';
 
+// Verificador estricto de rol administrador
+const isUserAdmin = (user: any): boolean => {
+  if (!user) return false;
+  const role = String(user.role || '').toLowerCase();
+  return role === 'user_admin' || role === 'admin' || role === 'administrador';
+};
+
 export default function HomeScreen() {
   const { user, logout } = useAuth();
+  const isAdmin = isUserAdmin(user);
+
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState<'dashboard' | 'create' | 'academic' | 'services' | 'reports'>('dashboard');
+
+  // Portal activo: Los administradores entran al admin por defecto; las familias entran a 'family'
+  const [activePortal, setActivePortal] = useState<'family' | 'admin'>('family');
+
+  // Ajustar portal inicial según el rol del usuario autenticado
+  useEffect(() => {
+    if (isAdmin) {
+      setActivePortal('admin');
+    } else {
+      setActivePortal('family');
+    }
+  }, [isAdmin]);
+
+  // Guardia de seguridad: Si NO es administrador, forzar siempre a 'family'
+  useEffect(() => {
+    if (!isAdmin && activePortal === 'admin') {
+      setActivePortal('family');
+    }
+  }, [isAdmin, activePortal]);
 
   const [students, setStudents] = useState<Student[]>([]);
   const [staffList, setStaffList] = useState<Staff[]>([]);
@@ -125,22 +156,6 @@ export default function HomeScreen() {
             email: 'silvina.morales@educore.com',
             mustChangePassword: false,
           },
-          {
-            id: 'staff-4',
-            nombre: 'Prof. Mariana Rossi',
-            dni: '28444555',
-            role: 'Docente',
-            email: 'mariana.rossi@educore.com',
-            mustChangePassword: false,
-          },
-          {
-            id: 'staff-5',
-            nombre: 'Prof. Sarah Jenkins',
-            dni: '33999000',
-            role: 'Docente',
-            email: 'sarah.jenkins@educore.com',
-            mustChangePassword: false,
-          },
         ];
       }
 
@@ -207,6 +222,22 @@ export default function HomeScreen() {
   const adminName = user?.nombre || user?.email?.split('@')[0] || 'Fabricio Alegre';
   const adminInitial = adminName.charAt(0).toUpperCase();
 
+  // ── CONTROL DE ACCESO ESTRICTO POR ROL (RBAC) ──
+  // Si el usuario NO es administrador o si eligió la vista familiar, se renderiza EXCLUSIVAMENTE el Portal Familiar.
+  // Las familias nunca reciben acceso ni rutas al panel administrador.
+  if (!isAdmin || activePortal === 'family') {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0A0F1D' : '#F8FAFC' }]}>
+        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        <FamilyPanel
+          isDarkMode={isDarkMode}
+          onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Si el portal activo es 'admin', renderizamos el Panel Administrador
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0A0F1D' : '#F8FAFC' }]}>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
@@ -256,6 +287,7 @@ export default function HomeScreen() {
         adminName={adminName}
         adminInitial={adminInitial}
         isDarkMode={isDarkMode}
+        onSwitchToFamily={() => setActivePortal('family')}
       />
     </SafeAreaView>
   );
