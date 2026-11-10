@@ -207,8 +207,11 @@ export const StudentSubjectsTab: React.FC<StudentSubjectsTabProps> = ({
                 {/* Footer de la materia con horario y botón de consulta */}
                 <View style={[styles.cardFooter, { borderTopColor: theme.border }]}>
                   <View style={styles.scheduleRow}>
-                    <MaterialIcons name="schedule" size={14} color={theme.subColor} style={{ marginRight: 4 }} />
-                    <Text style={[styles.scheduleText, { color: theme.subColor }]} numberOfLines={1}>
+                    <MaterialIcons name="schedule" size={14} color="#EA580C" style={{ marginRight: 6 }} />
+                    <Text
+                      style={[styles.scheduleText, { color: theme.titleColor }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       {sub.schedule || 'Turno Regular'}
                     </Text>
                   </View>
@@ -225,7 +228,7 @@ export const StudentSubjectsTab: React.FC<StudentSubjectsTabProps> = ({
                     activeOpacity={0.7}
                   >
                     <MaterialIcons name="chat" size={14} color="#EA580C" style={{ marginRight: 4 }} />
-                    <Text style={styles.chatBtnText}>Consultar docente</Text>
+                    <Text style={styles.chatBtnText} maxFontSizeMultiplier={1.15}>Consultar docente</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -331,33 +334,35 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     marginTop: 12,
     paddingTop: 10,
     borderTopWidth: 1,
+    gap: 8,
   },
   scheduleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    marginRight: 8,
+    width: '100%',
   },
   scheduleText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
+    flex: 1,
   },
   chatBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    alignSelf: 'flex-end',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgba(234, 88, 12, 0.08)',
   },
   chatBtnText: {
     color: '#EA580C',
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '700',
   },
 });

@@ -76,17 +76,24 @@ export const FamilyStudentCard: React.FC<FamilyStudentCardProps> = ({
           <Text
             style={[styles.studentName, { color: theme.titleColor }]}
             numberOfLines={1}
+            maxFontSizeMultiplier={1.15}
           >
             {student.nombre}
           </Text>
           {isSelected && (
             <View style={styles.selectedPill}>
-              <Text style={styles.selectedPillText}>SELECCIONADO</Text>
+              <Text style={styles.selectedPillText} maxFontSizeMultiplier={1.1}>
+                SELECCIONADO
+              </Text>
             </View>
           )}
         </View>
 
-        <Text style={[styles.courseText, { color: theme.subColor }]} numberOfLines={1}>
+        <Text
+          style={[styles.courseText, { color: theme.subColor }]}
+          numberOfLines={1}
+          maxFontSizeMultiplier={1.15}
+        >
           {nivelCap} · {student.curso || 'Sin curso'}
         </Text>
       </View>

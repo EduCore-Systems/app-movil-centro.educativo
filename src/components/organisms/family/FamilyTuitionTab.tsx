@@ -804,7 +804,14 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
                     ) : (
                       <>
                         <MaterialIcons name="file-download" size={16} color="#10B981" style={{ marginRight: 6 }} />
-                        <Text style={styles.actionBtnReceiptText}>Descargar Recibo Oficial (PDF)</Text>
+                        <Text
+                          style={styles.actionBtnReceiptText}
+                          maxFontSizeMultiplier={1.15}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                        >
+                          Descargar Recibo Oficial (PDF)
+                        </Text>
                       </>
                     )}
                   </TouchableOpacity>

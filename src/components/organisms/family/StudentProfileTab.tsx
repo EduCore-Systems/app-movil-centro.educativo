@@ -120,12 +120,25 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
             activeOpacity={0.8}
           >
             <View style={styles.kpiHeaderRow}>
-              <Text style={[styles.kpiLabel, { color: theme.subColor }]}>ASISTENCIA</Text>
-              <MaterialIcons name="visibility" size={15} color="#EA580C" />
+              <Text style={[styles.kpiLabel, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+                ASISTENCIA
+              </Text>
+              <MaterialIcons name="visibility" size={13} color="#EA580C" />
             </View>
             <View style={styles.kpiValueRow}>
-              <Text style={[styles.kpiNumber, { color: theme.titleColor }]}>{attendance.percentage}%</Text>
-              <Text style={[styles.kpiSub, { color: attendance.percentage >= 75 ? '#D97706' : '#DC2626' }]}>
+              <Text
+                style={[styles.kpiNumber, { color: theme.titleColor }]}
+                maxFontSizeMultiplier={1.15}
+                adjustsFontSizeToFit
+                numberOfLines={1}
+              >
+                {attendance.percentage}%
+              </Text>
+              <Text
+                style={[styles.kpiSub, { color: attendance.percentage >= 75 ? '#D97706' : '#DC2626' }]}
+                maxFontSizeMultiplier={1.1}
+                numberOfLines={1}
+              >
                 {attendance.statusLabel}
               </Text>
             </View>
@@ -133,19 +146,39 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
 
           {/* KPI 2: Promedio */}
           <View style={[styles.kpiCard, { backgroundColor: theme.statCardBg, borderColor: theme.statCardBorder }]}>
-            <Text style={[styles.kpiLabel, { color: theme.subColor }]}>PROMEDIO</Text>
+            <Text style={[styles.kpiLabel, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+              PROMEDIO
+            </Text>
             <View style={styles.kpiValueRow}>
-              <Text style={[styles.kpiNumber, { color: '#EA580C' }]}>8.8</Text>
-              <Text style={[styles.kpiSub, { color: theme.subColor }]}>/10</Text>
+              <Text
+                style={[styles.kpiNumber, { color: '#EA580C' }]}
+                maxFontSizeMultiplier={1.15}
+                adjustsFontSizeToFit
+                numberOfLines={1}
+              >
+                8.8
+              </Text>
+              <Text style={[styles.kpiSub, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+                /10
+              </Text>
             </View>
           </View>
 
           {/* KPI 3: Conducta */}
           <View style={[styles.kpiCard, { backgroundColor: theme.statCardBg, borderColor: theme.statCardBorder }]}>
-            <Text style={[styles.kpiLabel, { color: theme.subColor }]}>CONDUCTA</Text>
+            <Text style={[styles.kpiLabel, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+              CONDUCTA
+            </Text>
             <View style={styles.kpiValueRow}>
-              <Text style={[styles.kpiTextVal, { color: theme.titleColor }]}>Excelente</Text>
-              <MaterialIcons name="verified" size={16} color="#10B981" style={{ marginLeft: 3 }} />
+              <Text
+                style={[styles.kpiTextVal, { color: theme.titleColor }]}
+                maxFontSizeMultiplier={1.15}
+                adjustsFontSizeToFit
+                numberOfLines={1}
+              >
+                Excelente
+              </Text>
+              <MaterialIcons name="verified" size={14} color="#10B981" style={{ marginLeft: 2 }} />
             </View>
           </View>
         </View>
@@ -266,17 +299,18 @@ const styles = StyleSheet.create({
   },
   kpiRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     borderTopWidth: 1,
     borderTopColor: '#33415530',
-    paddingTop: 16,
+    paddingTop: 14,
   },
   kpiCard: {
     flex: 1,
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 12,
+    padding: 8,
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   kpiHeaderRow: {
     flexDirection: 'row',
@@ -287,23 +321,23 @@ const styles = StyleSheet.create({
   kpiLabel: {
     fontSize: 9,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   kpiValueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 2,
   },
   kpiNumber: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '900',
   },
   kpiSub: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
   },
   kpiTextVal: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '800',
   },
 });
