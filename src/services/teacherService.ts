@@ -614,6 +614,22 @@ export const getTeacherAcademicData = async (user?: any): Promise<TeacherAcademi
           };
         });
 
+      const teacherSports = allSports.filter((sp: any) => {
+        if (sp.teacherId && (sp.teacherId === userUid || sp.teacherId === user?.teacherId)) return true;
+        if (sp.teacherEmail && userEmail && sp.teacherEmail.toLowerCase() === userEmail) return true;
+        if (sp.teacherName && userNombre) {
+          const cleanSp = sp.teacherName.toLowerCase();
+          if (cleanSp.includes(userNombre) || userNombre.includes(cleanSp)) return true;
+        }
+        return false;
+      }).map((sp: any) => {
+        const schedules = allSchedules.filter((sch: any) => sch.referenceId === sp.id && sch.type === 'sport');
+        return {
+          ...sp,
+          schedules,
+        };
+      });
+
       if (teacherSubjects.length > 0) {
         const uniqueStudentsMap = new Map();
         teacherSubjects.forEach(sub => {
@@ -626,13 +642,13 @@ export const getTeacherAcademicData = async (user?: any): Promise<TeacherAcademi
 
         return {
           subjects: teacherSubjects,
-          sports: allSports,
+          sports: teacherSports,
           courses,
           schedules: allSchedules,
           students: uniqueStudents,
           totalStudentsCount: uniqueStudents.length,
           subjectsCount: teacherSubjects.length,
-          sportsCount: allSports.length,
+          sportsCount: teacherSports.length,
         };
       }
     }
@@ -652,13 +668,13 @@ export const getTeacherAcademicData = async (user?: any): Promise<TeacherAcademi
 
   return {
     subjects: DEFAULT_TEACHER_SUBJECTS,
-    sports: DEFAULT_TEACHER_SPORTS,
+    sports: [],
     courses: [],
     schedules: [],
     students: uniqueStudents,
     totalStudentsCount: uniqueStudents.length, // Exactamente 11 alumnos únicos
     subjectsCount: DEFAULT_TEACHER_SUBJECTS.length, // Exactamente 16 materias
-    sportsCount: DEFAULT_TEACHER_SPORTS.length,
+    sportsCount: 0,
   };
 };
 

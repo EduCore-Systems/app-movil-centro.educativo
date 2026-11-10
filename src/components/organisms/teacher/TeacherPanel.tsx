@@ -14,6 +14,7 @@ import TeacherCoursesTab from './TeacherCoursesTab';
 import { TeacherAttendanceTab } from './TeacherAttendanceTab';
 import { TeacherMessagesTab } from './TeacherMessagesTab';
 import { TeacherScheduleTab } from './TeacherScheduleTab';
+import { TeacherSportsTab } from './TeacherSportsTab';
 import {
   TeacherCourseSubject,
   TeacherProfileData,
@@ -167,14 +168,10 @@ export const TeacherPanel: React.FC<TeacherPanelProps> = ({
 
             {/* PESTAÑA 5: Deportes y Talleres (Fase 5) */}
             {activeTab === 'talleres' && (
-              <View style={[styles.placeholderCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-                <Text style={[styles.placeholderTitle, { color: theme.titleColor }]}>
-                  Deportes y Talleres Extracurriculares
-                </Text>
-                <Text style={[styles.placeholderSub, { color: theme.subColor }]}>
-                  Fase 5: Espacios formativos, entrenamientos y talleres a tu cargo.
-                </Text>
-              </View>
+              <TeacherSportsTab
+                sports={sports}
+                isDarkMode={isDarkMode}
+              />
             )}
           </>
         )}
