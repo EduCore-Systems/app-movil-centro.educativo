@@ -436,6 +436,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return staffEmail === cleanIdLower;
     });
 
+    // 2.A: Intentar autenticación real en Firebase Auth para sincronizar con la nube y Firestore
+    const emailToAuth = cleanId.includes('@') ? cleanId : (matchedStaff?.email || null);
+    if (emailToAuth) {
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, emailToAuth, cleanPass);
+        const uid = userCredential.user.uid;
+
+        let teacherProfile: UserProfile = {
+          uid,
+          email: userCredential.user.email,
+          nombre: matchedStaff?.nombre || 'Docente Titular',
+          role: 'Docente',
+          ...(matchedStaff || {}),
+        };
+
+        try {
+          const userDocSnap = await getDoc(doc(db, 'users', uid));
+          if (userDocSnap.exists()) {
+            const data = userDocSnap.data();
+            teacherProfile = {
+              ...teacherProfile,
+              ...data,
+              role: data.role || teacherProfile.role,
+            };
+          }
+        } catch {}
+
+        await AsyncStorage.multiRemove(['educore_student_session']);
+        await AsyncStorage.setItem('educore_teacher_session', JSON.stringify(teacherProfile));
+        setUser(teacherProfile);
+        return { success: true };
+      } catch (authErr: any) {
+        console.warn('Login directo de Firebase Auth falló, verificando nómina institucional:', authErr?.code || authErr);
+      }
+    }
+
+    // 2.B: Fallback de nómina institucional para personal (si no hay red o credencial nube directa)
     if (matchedStaff) {
       // Validar clave institucional (DNI inicial o clave asignada)
       const expectedPass = String(matchedStaff.dni || '');
