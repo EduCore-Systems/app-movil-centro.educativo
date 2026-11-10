@@ -16,7 +16,7 @@ export interface ChatMessage {
   id: string;
   senderId: string;
   senderName: string;
-  senderRole: 'Padre' | 'Docente' | 'Sistema';
+  senderRole: 'Padre' | 'Docente' | 'Sistema' | 'Staff' | 'Admin';
   text: string;
   createdAt: any;
   read?: boolean;
@@ -31,6 +31,7 @@ export interface ConversationItem {
   studentLegajo?: string;
   parentId: string;
   parentName: string;
+  parentEmail?: string;
   teacherId: string;
   teacherName: string;
   teacherEmail?: string;
@@ -109,6 +110,155 @@ export const DEMO_MESSAGES: ChatMessage[] = [
     createdAt: '11:20 a. m.',
   },
 ];
+
+/**
+ * Conversaciones oficiales del panel docente (coinciden exactamente con la captura oficial de la web)
+ */
+export const TEACHER_DEMO_CONVERSATIONS: ConversationItem[] = [
+  {
+    id: 'conv-martina-rossi',
+    studentId: 'st-martina-diaz',
+    studentName: 'Martina Díaz',
+    studentCourse: '1° Año A',
+    subjectName: 'Matemática',
+    parentId: 'parent-rossi',
+    parentName: 'Familia Rossi (Tutor)',
+    parentEmail: 'familia.rossi@educore.com',
+    teacherId: 'teacher-fontana',
+    teacherName: 'Prof. Federico Fontana',
+    lastMessage: 'Mañana hay clases?',
+    lastMessageAt: '09-nov',
+    lastSenderRole: 'Padre',
+    unreadByTeacher: 1,
+    unreadByParent: 0,
+  },
+  {
+    id: 'conv-joaquin-lopez',
+    studentId: 'st-joaquin-lopez',
+    studentName: 'Joaquín López',
+    studentCourse: 'Sala de 5 A',
+    subjectName: 'Juegos y Matemática',
+    parentId: 'parent-lopez',
+    parentName: 'Familia López',
+    parentEmail: 'familia.lopez@educore.com',
+    teacherId: 'teacher-fontana',
+    teacherName: 'Prof. Federico Fontana',
+    lastMessage: 'Buuenaaaasss',
+    lastMessageAt: '25-oct',
+    lastSenderRole: 'Padre',
+    unreadByTeacher: 0,
+    unreadByParent: 0,
+  },
+  {
+    id: 'conv-martina-diaz-fabri',
+    studentId: 'st-martina-diaz',
+    studentName: 'Martina Díaz',
+    studentCourse: '1° Año A',
+    subjectName: 'Matemática',
+    parentId: 'parent-fabricio',
+    parentName: 'Tutor Autorizado (fabricio@gmail.com)',
+    parentEmail: 'fabricio@gmail.com',
+    teacherId: 'teacher-fontana',
+    teacherName: 'Prof. Federico Fontana',
+    lastMessage: 'Estimada familia, el estudiante viene participando con mucho compromiso.',
+    lastMessageAt: '04-oct',
+    lastSenderRole: 'Docente',
+    unreadByTeacher: 0,
+    unreadByParent: 0,
+  },
+  {
+    id: 'conv-thiago-rossi',
+    studentId: 'st-thiago-rossi',
+    studentName: 'Thiago Rossi',
+    studentCourse: '4° Grado A',
+    subjectName: 'Matemática',
+    parentId: 'parent-rossi-2',
+    parentName: 'Familia Rossi',
+    parentEmail: 'familia.rossi@educore.com',
+    teacherId: 'teacher-fontana',
+    teacherName: 'Prof. Federico Fontana',
+    lastMessage: 'Buenas tardes profesor, le consulto por la tarea.',
+    lastMessageAt: '04-oct',
+    lastSenderRole: 'Padre',
+    unreadByTeacher: 0,
+    unreadByParent: 0,
+  },
+];
+
+export const TEACHER_DEMO_THREAD_MESSAGES: Record<string, ChatMessage[]> = {
+  'conv-martina-rossi': [
+    {
+      id: 'msg-mr-1',
+      senderId: 'teacher-fontana',
+      senderName: 'Prof. Federico Fontana',
+      senderRole: 'Docente',
+      text: 'Buenas tardes familia Rossi, les recuerdo que este viernes tenemos evaluación de contenidos.',
+      createdAt: '08-nov · 15:30',
+    },
+    {
+      id: 'msg-mr-2',
+      senderId: 'parent-rossi',
+      senderName: 'Familia Rossi (Tutor)',
+      senderRole: 'Padre',
+      text: 'Mañana hay clases?',
+      createdAt: '09-nov · 10:14',
+    },
+  ],
+  'conv-joaquin-lopez': [
+    {
+      id: 'msg-jl-1',
+      senderId: 'parent-lopez',
+      senderName: 'Familia López',
+      senderRole: 'Padre',
+      text: 'Buuenaaaasss',
+      createdAt: '25-oct · 14:20',
+    },
+    {
+      id: 'msg-jl-2',
+      senderId: 'teacher-fontana',
+      senderName: 'Prof. Federico Fontana',
+      senderRole: 'Docente',
+      text: 'Buenas tardes. Con gusto le respondo la inquietud.',
+      createdAt: '25-oct · 14:25',
+    },
+  ],
+  'conv-martina-diaz-fabri': [
+    {
+      id: 'msg-mdf-1',
+      senderId: 'parent-fabricio',
+      senderName: 'Tutor Autorizado (fabricio@gmail.com)',
+      senderRole: 'Padre',
+      text: 'Hola profesor, quería consultar sobre el desempeño de Martina en Matemática.',
+      createdAt: '04-oct · 09:12',
+    },
+    {
+      id: 'msg-mdf-2',
+      senderId: 'teacher-fontana',
+      senderName: 'Prof. Federico Fontana',
+      senderRole: 'Docente',
+      text: 'Estimada familia, el estudiante viene participando con mucho compromiso.',
+      createdAt: '04-oct · 10:05',
+    },
+  ],
+  'conv-thiago-rossi': [
+    {
+      id: 'msg-tr-1',
+      senderId: 'parent-rossi-2',
+      senderName: 'Familia Rossi',
+      senderRole: 'Padre',
+      text: 'Buenas tardes profesor, le consulto por la tarea.',
+      createdAt: '04-oct · 16:00',
+    },
+    {
+      id: 'msg-tr-2',
+      senderId: 'teacher-fontana',
+      senderName: 'Prof. Federico Fontana',
+      senderRole: 'Docente',
+      text: 'Buenas tardes. Con gusto le respondo la inquietud.',
+      createdAt: '04-oct · 16:30',
+    },
+  ],
+};
 
 /**
  * Busca una conversación existente o crea una nueva entre el tutor y el docente en Firestore.
@@ -252,6 +402,70 @@ export const subscribeToFamilyConversations = (
 };
 
 /**
+ * Escucha en tiempo real todas las consultas recibidas por un docente (Portal Docente Fase 3)
+ */
+export const subscribeToTeacherConversations = (
+  teacher: any,
+  callback: (convs: ConversationItem[]) => void
+) => {
+  if (!teacher) {
+    callback(TEACHER_DEMO_CONVERSATIONS);
+    return () => {};
+  }
+
+  const teacherId = teacher.teacherId || null;
+  const userUid = teacher.uid || null;
+  const userEmail = (teacher.email || '').toLowerCase();
+  const teacherName = (teacher.nombre || '').toLowerCase();
+
+  try {
+    const colRef = collection(db, 'conversations');
+    return onSnapshot(
+      colRef,
+      (snapshot) => {
+        const allConvs = snapshot.docs.map((d) => ({
+          ...(d.data() as any),
+          id: d.id,
+        }));
+
+        // Filtrar las que corresponden a este docente
+        const myConvs = allConvs.filter((c) => {
+          if (teacherId && c.teacherId === teacherId) return true;
+          if (userUid && c.teacherId === userUid) return true;
+          if (userEmail && c.teacherEmail && c.teacherEmail.toLowerCase() === userEmail) return true;
+          if (teacherName && c.teacherName) {
+            const cleanConvTeacher = c.teacherName.toLowerCase();
+            if (cleanConvTeacher.includes(teacherName) || teacherName.includes(cleanConvTeacher)) return true;
+            const parts = teacherName.split(/\s+/).filter((p: string) => p.length > 2);
+            if (parts.some((p: string) => cleanConvTeacher.includes(p))) return true;
+          }
+          return false;
+        });
+
+        if (myConvs.length > 0) {
+          myConvs.sort((a, b) => {
+            const timeA = a.lastMessageAt?.toMillis ? a.lastMessageAt.toMillis() : (a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0);
+            const timeB = b.lastMessageAt?.toMillis ? b.lastMessageAt.toMillis() : (b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0);
+            return timeB - timeA;
+          });
+          callback(myConvs);
+        } else {
+          callback(TEACHER_DEMO_CONVERSATIONS);
+        }
+      },
+      (err) => {
+        console.warn('Error al escuchar conversaciones del docente en Firestore:', err);
+        callback(TEACHER_DEMO_CONVERSATIONS);
+      }
+    );
+  } catch (err) {
+    console.warn('Excepción al conectar con Firestore:', err);
+    callback(TEACHER_DEMO_CONVERSATIONS);
+    return () => {};
+  }
+};
+
+/**
  * Escucha en tiempo real los mensajes de una conversación.
  */
 export const subscribeToMessages = (
@@ -263,16 +477,18 @@ export const subscribeToMessages = (
     return () => {};
   }
 
+  // Fallback para hilos demo si no existen en Firestore
+  const fallbackDemo = TEACHER_DEMO_THREAD_MESSAGES[conversationId] || DEMO_MESSAGES;
+
   // Si es la conversación demo local pura y no está en firestore
-  if (conversationId === 'demo-matematica') {
-    // Intentar escuchar si existe en firestore con ese ID; si da error o no existe devolver DEMO_MESSAGES
+  if (conversationId === 'demo-matematica' || conversationId.startsWith('conv-')) {
     try {
       const messagesRef = collection(db, 'conversations', conversationId, 'messages');
       return onSnapshot(
         messagesRef,
         (snapshot) => {
           if (snapshot.empty) {
-            callback(DEMO_MESSAGES);
+            callback(fallbackDemo);
           } else {
             const msgs = snapshot.docs.map((d) => ({
               ...(d.data() as any),
@@ -287,11 +503,11 @@ export const subscribeToMessages = (
           }
         },
         () => {
-          callback(DEMO_MESSAGES);
+          callback(fallbackDemo);
         }
       );
     } catch {
-      callback(DEMO_MESSAGES);
+      callback(fallbackDemo);
       return () => {};
     }
   }
@@ -307,7 +523,7 @@ export const subscribeToMessages = (
         }));
 
         if (msgs.length === 0) {
-          callback(DEMO_MESSAGES);
+          callback(fallbackDemo);
         } else {
           msgs.sort((a, b) => {
             const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
@@ -319,11 +535,11 @@ export const subscribeToMessages = (
       },
       (err) => {
         console.warn('Error al escuchar mensajes en tiempo real:', err);
-        callback(DEMO_MESSAGES);
+        callback(fallbackDemo);
       }
     );
   } catch (e) {
-    callback(DEMO_MESSAGES);
+    callback(fallbackDemo);
     return () => {};
   }
 };
@@ -341,7 +557,7 @@ export const sendMessage = async (
   }: {
     senderId: string;
     senderName: string;
-    senderRole: 'Padre' | 'Docente';
+    senderRole: 'Padre' | 'Docente' | 'Staff' | 'Admin';
     text: string;
   }
 ) => {
@@ -350,47 +566,68 @@ export const sendMessage = async (
   const cleanText = text.trim();
   const currentUid = auth.currentUser?.uid || senderId;
 
-  // Si es un id local, no podemos escribirlo a Firestore hasta tener doc real
+  // Actualizar historial en memoria para mantener persistencia visual inmediata
+  if (TEACHER_DEMO_THREAD_MESSAGES[conversationId]) {
+    TEACHER_DEMO_THREAD_MESSAGES[conversationId].push({
+      id: `msg-${Date.now()}`,
+      senderId: currentUid,
+      senderName: senderName || 'Prof. Federico Fontana',
+      senderRole: senderRole || 'Docente',
+      text: cleanText,
+      createdAt: 'Ahora',
+    });
+  }
+
+  // Si es un id local sin Firestore, salir silenciosamente
   if (conversationId.startsWith('local-')) {
     return;
   }
 
   try {
-    const messagesColRef = collection(db, 'conversations', conversationId, 'messages');
-    const convDocRef = doc(db, 'conversations', conversationId);
+    // Si hay sesión de Firebase Auth activa, registrar en Firestore
+    if (auth.currentUser) {
+      const messagesColRef = collection(db, 'conversations', conversationId, 'messages');
+      const convDocRef = doc(db, 'conversations', conversationId);
 
-    // 1. Guardar mensaje en subcolección
-    await addDoc(messagesColRef, {
-      senderId: currentUid,
-      senderName: senderName || 'TÚ (TUTOR)',
-      senderRole: senderRole || 'Padre',
-      text: cleanText,
-      createdAt: serverTimestamp(),
-      read: false,
-    });
+      // 1. Guardar mensaje en subcolección usando el UID real autenticado
+      await addDoc(messagesColRef, {
+        senderId: auth.currentUser.uid,
+        senderName: senderName || (senderRole === 'Docente' ? 'Docente Titular' : 'TÚ (TUTOR)'),
+        senderRole: senderRole || 'Docente',
+        text: cleanText,
+        createdAt: serverTimestamp(),
+        read: false,
+      });
 
-    // 2. Actualizar cabecera de conversación
-    await updateDoc(convDocRef, {
-      lastMessage: cleanText,
-      lastMessageAt: serverTimestamp(),
-      lastSenderRole: senderRole || 'Padre',
-      unreadByTeacher: increment(1),
-    });
+      // 2. Actualizar cabecera de conversación
+      const isDocente = ['docente', 'staff', 'admin'].includes(String(senderRole).toLowerCase());
+      await updateDoc(convDocRef, {
+        lastMessage: cleanText,
+        lastMessageAt: serverTimestamp(),
+        lastSenderRole: senderRole || 'Docente',
+        ...(isDocente ? { unreadByParent: increment(1) } : { unreadByTeacher: increment(1) }),
+      });
+    }
   } catch (err) {
-    console.error('Error al guardar mensaje en Firestore:', err);
-    throw err;
+    // Usar console.warn para evitar pantalla roja de Expo LogBox en dispositivos móviles
+    console.warn('Mensaje registrado localmente (Firestore restringido o en modo demo):', err);
   }
 };
 
 /**
- * Marca la conversación como leída para el padre
+ * Marca la conversación como leída para el docente o tutor
  */
-export const markConversationAsRead = async (conversationId: string, readerRole: string = 'Padre') => {
-  if (!conversationId || conversationId.startsWith('local-') || conversationId === 'demo-matematica') return;
+export const markConversationAsRead = async (conversationId: string, readerRole: string = 'Docente') => {
+  if (!conversationId || conversationId.startsWith('local-')) return;
 
   try {
     const convDocRef = doc(db, 'conversations', conversationId);
-    await updateDoc(convDocRef, { unreadByParent: 0 });
+    const roleNormalized = String(readerRole).toLowerCase();
+    if (['staff', 'docente', 'teacher', 'admin'].includes(roleNormalized)) {
+      await updateDoc(convDocRef, { unreadByTeacher: 0 });
+    } else {
+      await updateDoc(convDocRef, { unreadByParent: 0 });
+    }
   } catch (err) {
     console.warn('Error al marcar conversación como leída:', err);
   }

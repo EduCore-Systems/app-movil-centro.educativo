@@ -15,9 +15,10 @@ import AdminAcademicTab from '../components/organisms/admin/AdminAcademicTab';
 import AdminServicesTab from '../components/organisms/admin/AdminServicesTab';
 import AdminReportsTab from '../components/organisms/admin/AdminReportsTab';
 
-// Import Organism Family Portal
+// Import Organisms Portales
 import FamilyPanel from '../components/organisms/family/FamilyPanel';
 import StudentPanel from '../components/organisms/student/StudentPanel';
+import TeacherPanel from '../components/organisms/teacher/TeacherPanel';
 
 // Import Types
 import { Student } from '../components/molecules/StudentCard';
@@ -36,35 +37,61 @@ const isUserStudent = (user: any): boolean => {
   return role === 'estudiante' || role === 'student' || role === 'user_student' || /^est-\d+/i.test(String(user.studentID_login || user.dni || ''));
 };
 
+const isUserTeacher = (user: any): boolean => {
+  if (!user) return false;
+  const role = String(user.role || '').toLowerCase();
+  return (
+    role.includes('docente') ||
+    role.includes('profesor') ||
+    role.includes('staff') ||
+    role.includes('teacher') ||
+    role.includes('maestro')
+  );
+};
+
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const isAdmin = isUserAdmin(user);
   const isStudent = isUserStudent(user);
+  const isTeacher = isUserTeacher(user);
 
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState<'dashboard' | 'create' | 'academic' | 'services' | 'reports'>('dashboard');
 
-  // Portal activo: 'student', 'family' o 'admin'
-  const [activePortal, setActivePortal] = useState<'student' | 'family' | 'admin'>('student');
+  // Portal activo: 'teacher', 'student', 'family' o 'admin'
+  const [activePortal, setActivePortal] = useState<'teacher' | 'student' | 'family' | 'admin'>(() => {
+    if (isAdmin) return 'admin';
+    if (isTeacher) return 'teacher';
+    if (isStudent) return 'student';
+    return 'family';
+  });
 
   // Ajustar portal inicial según el rol del usuario autenticado
   useEffect(() => {
     if (isAdmin) {
       setActivePortal('admin');
+    } else if (isTeacher) {
+      setActivePortal('teacher');
     } else if (isStudent) {
       setActivePortal('student');
     } else {
       setActivePortal('family');
     }
-  }, [isAdmin, isStudent]);
+  }, [isAdmin, isTeacher, isStudent]);
 
   // Guardia de seguridad: Si NO es administrador, jamás permitir acceso a 'admin'
   useEffect(() => {
     if (!isAdmin && activePortal === 'admin') {
-      setActivePortal(isStudent ? 'student' : 'family');
+      if (isTeacher) {
+        setActivePortal('teacher');
+      } else if (isStudent) {
+        setActivePortal('student');
+      } else {
+        setActivePortal('family');
+      }
     }
-  }, [isAdmin, isStudent, activePortal]);
+  }, [isAdmin, isTeacher, isStudent, activePortal]);
 
   const [students, setStudents] = useState<Student[]>([]);
   const [staffList, setStaffList] = useState<Staff[]>([]);
@@ -233,7 +260,20 @@ export default function HomeScreen() {
   const adminInitial = adminName.charAt(0).toUpperCase();
 
   // ── CONTROL DE ACCESO ESTRICTO POR ROL (RBAC) ──
-  // 1. Si el portal activo es 'student' o el usuario es estudiante, renderizar el Portal del Alumno
+  // 1. Si el portal activo es 'teacher', renderizar el Portal Docente
+  if (activePortal === 'teacher') {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0A0F1D' : '#F8FAFC' }]}>
+        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        <TeacherPanel
+          isDarkMode={isDarkMode}
+          onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // 2. Si el portal activo es 'student', renderizar el Portal del Alumno
   if (activePortal === 'student') {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0A0F1D' : '#F8FAFC' }]}>
@@ -246,7 +286,7 @@ export default function HomeScreen() {
     );
   }
 
-  // 2. Si no es admin o eligió la vista familiar, renderizar el Portal Familiar
+  // 3. Si no es admin o eligió la vista familiar, renderizar el Portal Familiar
   if (!isAdmin || activePortal === 'family') {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0A0F1D' : '#F8FAFC' }]}>
@@ -259,7 +299,7 @@ export default function HomeScreen() {
     );
   }
 
-  // Si el portal activo es 'admin', renderizamos el Panel Administrador
+  // 4. Si el portal activo es 'admin', renderizamos el Panel Administrador
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0A0F1D' : '#F8FAFC' }]}>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />

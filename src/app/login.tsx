@@ -75,13 +75,13 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
-          {/* Campo Correo Electrónico o Legajo */}
-          <Text style={styles.label}>Correo Electrónico o Legajo</Text>
+          {/* Campo Correo Electrónico, Legajo o DNI */}
+          <Text style={styles.label}>Correo Electrónico, Legajo o DNI</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="mail-outline" size={20} color="#94A3B8" style={styles.inputIconLeft} />
             <TextInput
               style={styles.input}
-              placeholder="ej. usuario@email.com o EST-2026-401"
+              placeholder="ej. usuario@email.com, DNI o EST-2026-401"
               placeholderTextColor="#94A3B8"
               keyboardType="default"
               autoCapitalize="none"
@@ -98,12 +98,11 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Input Contraseña con botón ver/ocultar */}
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed-outline" size={20} color="#94A3B8" style={styles.inputIconLeft} />
             <TextInput
               style={styles.input}
-              placeholder="••••••••"
+              placeholder="Ingresa tu contraseña"
               placeholderTextColor="#94A3B8"
               secureTextEntry={!showPassword}
               value={password}
@@ -111,7 +110,8 @@ export default function LoginScreen() {
             />
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={styles.eyeIconRight}
+              activeOpacity={0.7}
             >
               <Ionicons
                 name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -121,44 +121,45 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Checkbox cuadrado (Mantener sesión iniciada) */}
-          <View style={styles.rememberRow}>
-            <TouchableOpacity
-              style={styles.checkboxContainer}
-              onPress={() => setRememberMe(!rememberMe)}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                {rememberMe && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
-              </View>
-              <Text style={styles.rememberText}>Mantener sesión iniciada</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Botón Principal Acceso Seguro con flecha */}
+          {/* Checkbox Recordarme */}
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={styles.rememberRow}
+            activeOpacity={0.8}
+            onPress={() => setRememberMe(!rememberMe)}
+          >
+            <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+              {rememberMe && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+            </View>
+            <Text style={styles.rememberText}>Recordarme</Text>
+          </TouchableOpacity>
+
+          {/* Botón Ingresar */}
+          <TouchableOpacity
+            style={styles.button}
+            activeOpacity={0.8}
             onPress={handleLogin}
             disabled={loading}
-            activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <View style={styles.buttonContent}>
-                <Text style={styles.buttonText}>Acceso Seguro</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 8 }} />
-              </View>
+              <Text style={styles.buttonText}>Ingresar</Text>
             )}
           </TouchableOpacity>
+
+          {/* Nota de ayuda institucional de acceso */}
+          <View style={styles.helpBox}>
+            <Ionicons name="information-circle-outline" size={16} color="#64748B" style={{ marginRight: 6 }} />
+            <Text style={styles.helpText}>
+              Personal Docente y Padres: Ingresan con correo o DNI. Alumnos con su Legajo EST-2026-XXX o DNI.
+            </Text>
+          </View>
         </View>
 
-        {/* Footer de Ayuda */}
+        {/* Footer Institucional */}
         <View style={styles.footer}>
-          <Text style={styles.supportLabel}>¿Necesitas ayuda para acceder a tu cuenta? </Text>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Text style={styles.supportLink}>Contactar Soporte</Text>
-          </TouchableOpacity>
+          <Text style={styles.footerSlogan}>EduCore · Educar para Transformar</Text>
+          <Text style={styles.footerCopyright}>Ciclo Lectivo 2026 · Todos los derechos reservados</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -172,51 +173,67 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 32,
     justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 40,
   },
   header: {
     alignItems: 'center',
     marginBottom: 24,
   },
   logoContainer: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: '#FFFFFF',
+    shadowColor: '#EA580C',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 8,
+    overflow: 'hidden',
+    marginBottom: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-    elevation: 4,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#FED7AA',
   },
   logo: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: '100%',
+    height: '100%',
   },
   portalTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '800',
-    color: '#1E293B',
+    color: '#0F172A',
     letterSpacing: -0.5,
   },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: 24,
-    shadowColor: '#0F172A',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.05,
     shadowRadius: 20,
     elevation: 4,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#B91C1C',
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
   },
   label: {
     fontSize: 13,
@@ -224,57 +241,54 @@ const styles = StyleSheet.create({
     color: '#334155',
     marginBottom: 8,
   },
-  passwordHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  forgotText: {
-    fontSize: 13,
-    color: '#EA580C',
-    fontWeight: '600',
-    marginBottom: 8,
-  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    height: 52,
-    marginBottom: 16,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
+    marginBottom: 16,
   },
   inputIconLeft: {
     marginRight: 10,
   },
+  eyeIconRight: {
+    padding: 4,
+  },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     color: '#0F172A',
+  },
+  passwordHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  forgotText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#EA580C',
+    marginBottom: 8,
   },
   rememberRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
-    marginBottom: 22,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 20,
   },
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: 5,
+    borderRadius: 6,
     borderWidth: 1.5,
     borderColor: '#CBD5E1',
-    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: 10,
+    backgroundColor: '#FFFFFF',
   },
   checkboxChecked: {
     backgroundColor: '#EA580C',
@@ -287,57 +301,49 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#EA580C',
-    borderRadius: 14,
-    height: 52,
+    height: 48,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#EA580C',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
-    shadowRadius: 10,
+    shadowRadius: 8,
     elevation: 4,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
   },
-  errorBox: {
+  helpBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
+    backgroundColor: '#F8FAFC',
     borderRadius: 10,
     padding: 10,
-    marginBottom: 16,
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  errorText: {
-    color: '#B91C1C',
-    fontSize: 13,
+  helpText: {
+    fontSize: 11,
+    color: '#64748B',
+    lineHeight: 16,
     flex: 1,
   },
   footer: {
+    marginTop: 28,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 26,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
   },
-  supportLabel: {
+  footerSlogan: {
     fontSize: 13,
+    fontWeight: '600',
     color: '#64748B',
+    marginBottom: 4,
   },
-  supportLink: {
-    fontSize: 13,
-    color: '#EA580C',
-    fontWeight: '700',
+  footerCopyright: {
+    fontSize: 11,
+    color: '#94A3B8',
   },
 });
