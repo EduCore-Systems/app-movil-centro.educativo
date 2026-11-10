@@ -23,9 +23,6 @@ export const FamilyTopBar: React.FC<FamilyTopBarProps> = ({
     topBarBorder: isDarkMode ? '#1E293B' : '#E2E8F0',
     textPrimary: isDarkMode ? '#F8FAFC' : '#0F172A',
     subText: isDarkMode ? '#94A3B8' : '#64748B',
-    badgeBg: isDarkMode ? '#064E3B40' : '#ECFDF5',
-    badgeBorder: isDarkMode ? '#05966950' : '#A7F3D0',
-    badgeText: isDarkMode ? '#6EE7B7' : '#047857',
     divider: isDarkMode ? '#334155' : '#CBD5E1',
   };
 
@@ -33,40 +30,46 @@ export const FamilyTopBar: React.FC<FamilyTopBarProps> = ({
     <View style={[styles.topBar, { backgroundColor: theme.topBarBg, borderBottomColor: theme.topBarBorder }]}>
       {/* Izquierda: Menú Hamburguesa + Título Portal Familiar */}
       <View style={styles.leftSection}>
-        <TouchableOpacity onPress={onOpenSidebar} style={styles.menuButton}>
+        <TouchableOpacity onPress={onOpenSidebar} style={styles.menuButton} activeOpacity={0.7}>
           <Ionicons name="menu" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
         <View style={styles.brandBox}>
-          <MaterialIcons name="family-restroom" size={20} color="#EA580C" style={{ marginRight: 5 }} />
-          <Text style={[styles.brandText, { color: theme.textPrimary }]} numberOfLines={1}>
+          <MaterialIcons name="family-restroom" size={20} color="#EA580C" style={{ marginRight: 6 }} />
+          <Text
+            style={[styles.brandText, { color: theme.textPrimary }]}
+            numberOfLines={1}
+            maxFontSizeMultiplier={1.15}
+          >
             Portal Familiar
           </Text>
         </View>
       </View>
 
-      {/* Derecha: Badge Ciclo 26 Activo + ThemeToggle + Divider + Avatar + Nombre */}
+      {/* Derecha: ThemeToggle + Divisor + Avatar del Tutor con indicador activo */}
       <View style={styles.rightSection}>
-        {/* Pastilla Ciclo Activo abreviada a "Ciclo 26 Activo" para evitar superposición */}
-        <View style={[styles.cycleBadge, { backgroundColor: theme.badgeBg, borderColor: theme.badgeBorder }]}>
-          <View style={styles.pulseDot} />
-          <Text style={[styles.cycleText, { color: theme.badgeText }]}>Ciclo 26 Activo</Text>
-        </View>
-
         {/* Alternador de Tema */}
         <ThemeToggle isDarkMode={isDarkMode} onToggle={onToggleTheme} />
 
         {/* Divisor vertical sutil */}
         <View style={[styles.dividerVertical, { backgroundColor: theme.divider }]} />
 
-        {/* Avatar del Tutor + Nombre */}
-        <View style={styles.tutorContainer}>
+        {/* Avatar del Tutor con punto verde activo + Nombre */}
+        <TouchableOpacity onPress={onOpenSidebar} style={styles.tutorContainer} activeOpacity={0.8}>
           <View style={styles.avatarBox}>
-            <Text style={styles.avatarText}>{initial}</Text>
+            <Text style={styles.avatarText} maxFontSizeMultiplier={1.1}>
+              {initial}
+            </Text>
+            {/* Punto indicador de sesión activa */}
+            <View style={styles.activeDot} />
           </View>
-          <Text style={[styles.tutorNameText, { color: theme.subText }]} numberOfLines={1}>
+          <Text
+            style={[styles.tutorNameText, { color: theme.subText }]}
+            numberOfLines={1}
+            maxFontSizeMultiplier={1.15}
+          >
             {tutorName}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -86,73 +89,66 @@ const styles = StyleSheet.create({
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexShrink: 1,
-    marginRight: 4,
+    flexShrink: 0,
   },
   menuButton: {
     padding: 4,
-    marginRight: 4,
+    marginRight: 6,
   },
   brandBox: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   brandText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
+    letterSpacing: -0.2,
   },
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    flexShrink: 0,
-  },
-  cycleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 7,
-    paddingVertical: 3.5,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  pulseDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#10B981',
-    marginRight: 4,
-  },
-  cycleText: {
-    fontSize: 9.5,
-    fontWeight: '800',
-    letterSpacing: 0.2,
+    gap: 8,
+    flexShrink: 1,
   },
   dividerVertical: {
     width: 1,
     height: 18,
-    marginHorizontal: 1,
+    marginHorizontal: 2,
   },
   tutorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
+    flexShrink: 1,
   },
   avatarBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#EA580C',
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
   },
   avatarText: {
     color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 13,
   },
+  activeDot: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: '#10B981',
+    borderWidth: 1.5,
+    borderColor: '#0F172A',
+  },
   tutorNameText: {
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: '700',
-    maxWidth: 85,
+    maxWidth: 90,
   },
 });

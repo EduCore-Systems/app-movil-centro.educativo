@@ -410,10 +410,16 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
               <MaterialIcons name="account-balance-wallet" size={20} color="#EA580C" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.headerTitle, { color: theme.titleColor }]}>
+              <Text
+                style={[styles.headerTitle, { color: theme.titleColor }]}
+                maxFontSizeMultiplier={1.15}
+              >
                 Gestión de Cuotas y Aranceles
               </Text>
-              <Text style={[styles.headerSubtitle, { color: theme.subColor }]}>
+              <Text
+                style={[styles.headerSubtitle, { color: theme.subColor }]}
+                maxFontSizeMultiplier={1.15}
+              >
                 Estado arancelario oficial de{' '}
                 <Text style={{ fontWeight: '700', color: '#EA580C' }}>{student.nombre}</Text>
               </Text>
@@ -433,23 +439,30 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
         <View style={styles.kpiContainer}>
           {/* KPI 1: Total Adeudado */}
           <View style={[styles.kpiCard, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
-            <Text style={[styles.kpiLabel, { color: theme.subColor }]}>TOTAL PENDIENTE</Text>
+            <Text style={[styles.kpiLabel, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+              TOTAL PENDIENTE
+            </Text>
             <Text
               style={[
                 styles.kpiValue,
                 { color: totalPendingAmount > 0 ? '#EA580C' : '#10B981' },
               ]}
+              maxFontSizeMultiplier={1.15}
+              adjustsFontSizeToFit
+              numberOfLines={1}
             >
               ${totalPendingAmount.toLocaleString('es-AR')}
             </Text>
-            <Text style={[styles.kpiHint, { color: theme.subColor }]}>
+            <Text style={[styles.kpiHint, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
               {pendingPayments.length} {pendingPayments.length === 1 ? 'cuota a vencer' : 'cuotas por abonar'}
             </Text>
           </View>
 
           {/* KPI 2: Estado Arancelario */}
           <View style={[styles.kpiCard, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
-            <Text style={[styles.kpiLabel, { color: theme.subColor }]}>ESTADO DE CUENTA</Text>
+            <Text style={[styles.kpiLabel, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+              ESTADO DE CUENTA
+            </Text>
             <View style={styles.statusPillRow}>
               <View
                 style={[
@@ -462,21 +475,33 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
                   styles.statusPillText,
                   { color: totalPendingAmount > 0 ? '#EA580C' : '#10B981' },
                 ]}
+                maxFontSizeMultiplier={1.15}
+                numberOfLines={1}
+                adjustsFontSizeToFit
               >
-                {totalPendingAmount > 0 ? 'Con Pendientes' : 'Al Día (Regular)'}
+                {totalPendingAmount > 0 ? 'Con Pendientes' : 'Al Día'}
               </Text>
             </View>
-            <Text style={[styles.kpiHint, { color: theme.subColor }]}>Ciclo Lectivo 2026</Text>
+            <Text style={[styles.kpiHint, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+              Ciclo Lectivo 2026
+            </Text>
           </View>
 
           {/* KPI 3: Próximo Vencimiento */}
           <View style={[styles.kpiCard, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
-            <Text style={[styles.kpiLabel, { color: theme.subColor }]}>PRÓXIMO VENCIMIENTO</Text>
-            <Text style={[styles.kpiValueDate, { color: theme.titleColor }]}>
+            <Text style={[styles.kpiLabel, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+              PRÓXIMO VENCE
+            </Text>
+            <Text
+              style={[styles.kpiValueDate, { color: theme.titleColor }]}
+              maxFontSizeMultiplier={1.15}
+              adjustsFontSizeToFit
+              numberOfLines={1}
+            >
               {nextDuePayment ? nextDuePayment.dueDate : 'Sin deudas'}
             </Text>
-            <Text style={[styles.kpiHint, { color: theme.subColor }]}>
-              {nextDuePayment ? 'Término administrativo' : 'Todas abonadas'}
+            <Text style={[styles.kpiHint, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+              {nextDuePayment ? 'Plazo adm.' : 'Al día'}
             </Text>
           </View>
         </View>
@@ -492,17 +517,13 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
           onPress={() => setActiveFilter('pendientes')}
           activeOpacity={0.8}
         >
-          <MaterialIcons
-            name="pending-actions"
-            size={16}
-            color={activeFilter === 'pendientes' ? '#FFFFFF' : theme.subColor}
-            style={{ marginRight: 6 }}
-          />
           <Text
             style={[
               styles.filterTabText,
               { color: activeFilter === 'pendientes' ? '#FFFFFF' : theme.subColor },
             ]}
+            maxFontSizeMultiplier={1.15}
+            numberOfLines={1}
           >
             Pendientes ({pendingPayments.length})
           </Text>
@@ -516,19 +537,15 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
           onPress={() => setActiveFilter('pagadas')}
           activeOpacity={0.8}
         >
-          <MaterialIcons
-            name="history"
-            size={16}
-            color={activeFilter === 'pagadas' ? '#FFFFFF' : theme.subColor}
-            style={{ marginRight: 6 }}
-          />
           <Text
             style={[
               styles.filterTabText,
               { color: activeFilter === 'pagadas' ? '#FFFFFF' : theme.subColor },
             ]}
+            maxFontSizeMultiplier={1.15}
+            numberOfLines={1}
           >
-            Historial Pagadas ({paidPayments.length})
+            Pagadas ({paidPayments.length})
           </Text>
         </TouchableOpacity>
 
@@ -545,6 +562,8 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
               styles.filterTabText,
               { color: activeFilter === 'todas' ? '#FFFFFF' : theme.subColor },
             ]}
+            maxFontSizeMultiplier={1.15}
+            numberOfLines={1}
           >
             Todas ({payments.length})
           </Text>
@@ -953,49 +972,48 @@ const styles = StyleSheet.create({
   // KPI Grid
   kpiContainer: {
     flexDirection: 'row',
-    gap: 10,
-    flexWrap: 'wrap',
+    gap: 8,
   },
   kpiCard: {
     flex: 1,
-    minWidth: 105,
     borderRadius: 14,
     borderWidth: 1,
-    padding: 12,
+    padding: 10,
+    justifyContent: 'space-between',
   },
   kpiLabel: {
     fontSize: 9,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
     marginBottom: 4,
   },
   kpiValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '900',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   kpiValueDate: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: '800',
   },
   kpiHint: {
-    fontSize: 10,
+    fontSize: 9.5,
     marginTop: 4,
     fontWeight: '500',
   },
   statusPillRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     marginTop: 2,
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
   },
   statusPillText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
   },
 
@@ -1004,16 +1022,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderRadius: 16,
     borderWidth: 1,
-    padding: 4,
+    padding: 3,
     marginBottom: 16,
     gap: 4,
+    alignItems: 'center',
   },
   filterTabBtn: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 9,
+    paddingHorizontal: 4,
     borderRadius: 12,
   },
   filterTabBtnActive: {
@@ -1022,6 +1041,7 @@ const styles = StyleSheet.create({
   filterTabText: {
     fontSize: 11,
     fontWeight: '700',
+    textAlign: 'center',
   },
 
   // Loading & Empty
