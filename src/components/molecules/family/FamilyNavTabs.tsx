@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export type FamilyTab = 'resumen' | 'materias' | 'servicios' | 'chat';
+export type FamilyTab = 'resumen' | 'materias' | 'servicios' | 'cuotas' | 'chat';
 
 interface FamilyNavTabsProps {
   activeTab: FamilyTab;
@@ -21,6 +21,7 @@ export const FamilyNavTabs: React.FC<FamilyNavTabsProps> = ({
     { key: 'resumen', label: 'Ficha del Estudiante', icon: 'badge' },
     { key: 'materias', label: 'Materias y Docentes', icon: 'menu-book' },
     { key: 'servicios', label: 'Servicios Escolares', icon: 'sports-soccer' },
+    { key: 'cuotas', label: 'Cuotas y Aranceles', icon: 'account-balance-wallet' },
     { key: 'chat', label: 'Consultas con Docentes', icon: 'chat' },
   ];
 

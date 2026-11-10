@@ -19,6 +19,7 @@ import LinkStudentModal from '../../molecules/family/LinkStudentModal';
 import StudentProfileTab from './StudentProfileTab';
 import StudentSubjectsTab from './StudentSubjectsTab';
 import StudentServicesTab from './StudentServicesTab';
+import FamilyTuitionTab from './FamilyTuitionTab';
 import FamilyChatTab from './FamilyChatTab';
 import FamilyDocumentModal from './FamilyDocumentModal';
 import { getChildrenForParent, FamilyStudent } from '../../../services/familyService';
@@ -287,7 +288,17 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
               />
             )}
 
-            {/* 4. Consultas con Docentes (Fase 3 - Sincronizado en tiempo real) */}
+            {/* 4. Gestión de Cuotas y Aranceles (Módulo 2 Coevaluación) */}
+            {activeTab === 'cuotas' && (
+              <FamilyTuitionTab
+                student={selectedStudent}
+                user={user}
+                isDarkMode={isDarkMode}
+                onBackToDashboard={() => handleSelectTab('resumen')}
+              />
+            )}
+
+            {/* 5. Consultas con Docentes (Fase 3 - Sincronizado en tiempo real) */}
             {activeTab === 'chat' && (
               <FamilyChatTab
                 student={selectedStudent}
