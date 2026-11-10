@@ -777,13 +777,19 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
                 <View style={[styles.paidHistoryBanner, { backgroundColor: isDarkMode ? 'rgba(16,185,129,0.08)' : '#F0FDF4' }]}>
                   <View style={styles.paidHistoryRow}>
                     <MaterialIcons name="verified" size={16} color="#10B981" style={{ marginRight: 6 }} />
-                    <Text style={[styles.paidHistoryText, { color: isDarkMode ? '#A7F3D0' : '#065F46' }]}>
+                    <Text
+                      style={[styles.paidHistoryText, { color: isDarkMode ? '#A7F3D0' : '#065F46' }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       Abonado: <Text style={{ fontWeight: '700' }}>{item.paidAt || 'Registrado'}</Text>
                     </Text>
                   </View>
 
                   <View style={styles.paidHistoryMetaRow}>
-                    <Text style={[styles.paidMetaLabel, { color: isDarkMode ? '#6EE7B7' : '#047857' }]}>
+                    <Text
+                      style={[styles.paidMetaLabel, { color: isDarkMode ? '#6EE7B7' : '#047857' }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       Medio: {item.paymentMethod || 'Transferencia'} · Comprobante: {item.receiptNumber || 'REC-OFICIAL'}
                     </Text>
                   </View>
@@ -803,7 +809,7 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
                       <ActivityIndicator size="small" color="#10B981" />
                     ) : (
                       <>
-                        <MaterialIcons name="file-download" size={16} color="#10B981" style={{ marginRight: 6 }} />
+                        <MaterialIcons name="file-download" size={18} color="#10B981" style={{ marginRight: 8 }} />
                         <Text
                           style={styles.actionBtnReceiptText}
                           maxFontSizeMultiplier={1.15}
@@ -821,8 +827,15 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
                     onPress={() => setSelectedPaymentForPay(item)}
                     activeOpacity={0.8}
                   >
-                    <MaterialIcons name="payment" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.actionBtnPayText}>Informar Pago / Datos Bancarios</Text>
+                    <MaterialIcons name="payment" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                    <Text
+                      style={styles.actionBtnPayText}
+                      maxFontSizeMultiplier={1.15}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                    >
+                      Informar Pago / Datos Bancarios
+                    </Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -1220,7 +1233,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   breakdownItemName: {
     fontSize: 12,
@@ -1231,27 +1244,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     flexShrink: 0,
+    marginLeft: 6,
   },
 
   // Historial Banner
   paidHistoryBanner: {
     borderRadius: 12,
-    padding: 10,
+    padding: 12,
     gap: 4,
   },
   paidHistoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 4,
   },
   paidHistoryText: {
-    fontSize: 11,
+    fontSize: 11.5,
+    flex: 1,
+    minWidth: 160,
   },
   paidHistoryMetaRow: {
     marginLeft: 22,
+    marginTop: 2,
   },
   paidMetaLabel: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: '600',
+    lineHeight: 15,
   },
 
   // Actions
@@ -1260,30 +1280,34 @@ const styles = StyleSheet.create({
   },
   actionBtnPay: {
     backgroundColor: '#EA580C',
-    borderRadius: 12,
+    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 14,
     paddingVertical: 12,
   },
   actionBtnPayText: {
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '700',
+    textAlign: 'center',
   },
   actionBtnReceipt: {
-    borderWidth: 1,
-    borderRadius: 12,
+    borderWidth: 1.5,
+    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 14,
     paddingVertical: 11,
     backgroundColor: 'rgba(16, 185, 129, 0.08)',
   },
   actionBtnReceiptText: {
     color: '#10B981',
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: '700',
+    textAlign: 'center',
   },
 
   // Modal Styles

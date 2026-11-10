@@ -146,9 +146,12 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
 
           {/* KPI 2: Promedio */}
           <View style={[styles.kpiCard, { backgroundColor: theme.statCardBg, borderColor: theme.statCardBorder }]}>
-            <Text style={[styles.kpiLabel, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
-              PROMEDIO
-            </Text>
+            <View style={styles.kpiHeaderRow}>
+              <Text style={[styles.kpiLabel, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+                PROMEDIO
+              </Text>
+              <MaterialIcons name="insights" size={13} color="#EA580C" />
+            </View>
             <View style={styles.kpiValueRow}>
               <Text
                 style={[styles.kpiNumber, { color: '#EA580C' }]}
@@ -159,16 +162,19 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
                 8.8
               </Text>
               <Text style={[styles.kpiSub, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
-                /10
+                Escala /10
               </Text>
             </View>
           </View>
 
           {/* KPI 3: Conducta */}
           <View style={[styles.kpiCard, { backgroundColor: theme.statCardBg, borderColor: theme.statCardBorder }]}>
-            <Text style={[styles.kpiLabel, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
-              CONDUCTA
-            </Text>
+            <View style={styles.kpiHeaderRow}>
+              <Text style={[styles.kpiLabel, { color: theme.subColor }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+                CONDUCTA
+              </Text>
+              <MaterialIcons name="verified" size={13} color="#10B981" />
+            </View>
             <View style={styles.kpiValueRow}>
               <Text
                 style={[styles.kpiTextVal, { color: theme.titleColor }]}
@@ -178,7 +184,9 @@ export const StudentProfileTab: React.FC<StudentProfileTabProps> = ({
               >
                 Excelente
               </Text>
-              <MaterialIcons name="verified" size={14} color="#10B981" style={{ marginLeft: 2 }} />
+              <Text style={[styles.kpiSub, { color: '#10B981' }]} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+                Destacada
+              </Text>
             </View>
           </View>
         </View>
@@ -299,6 +307,7 @@ const styles = StyleSheet.create({
   },
   kpiRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     borderTopWidth: 1,
     borderTopColor: '#33415530',
@@ -306,9 +315,11 @@ const styles = StyleSheet.create({
   },
   kpiCard: {
     flex: 1,
+    minWidth: 92,
     borderRadius: 16,
     borderWidth: 1,
-    padding: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     justifyContent: 'center',
     overflow: 'hidden',
   },

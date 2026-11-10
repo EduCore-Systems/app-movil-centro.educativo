@@ -296,11 +296,8 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
             <MaterialIcons name="directions-bus" size={20} color="#0284C7" />
           </View>
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={[styles.cardTitle, { color: theme.titleColor }]}>
+            <Text style={[styles.cardTitle, { color: theme.titleColor }]} maxFontSizeMultiplier={1.2}>
               Transporte Escolar <Text style={styles.rfTag}>(RF-17)</Text>
-            </Text>
-            <Text style={[styles.cardDesc, { color: theme.subColor }]}>
-              Logística puerta a puerta con choferes certificados.
             </Text>
           </View>
 
@@ -309,23 +306,27 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
             isTransportConfirmed ? (
               <View style={styles.confirmedPill}>
                 <View style={styles.greenDot} />
-                <Text style={styles.confirmedText}>Confirmado</Text>
+                <Text style={styles.confirmedText} maxFontSizeMultiplier={1.1}>Confirmado</Text>
               </View>
             ) : (
               <View style={styles.pendingPill}>
                 <View style={styles.amberDot} />
-                <Text style={styles.pendingText}>Solicitud Pendiente</Text>
+                <Text style={styles.pendingText} maxFontSizeMultiplier={1.1}>Solicitud Pendiente</Text>
               </View>
             )
           ) : (
             <View style={[styles.noServicePill, { backgroundColor: theme.boxBg, borderColor: theme.border }]}>
-              <Text style={[styles.noServiceText, { color: theme.subColor }]}>Sin servicio</Text>
+              <Text style={[styles.noServiceText, { color: theme.subColor }]} maxFontSizeMultiplier={1.1}>Sin servicio</Text>
             </View>
           )}
         </View>
 
+        <Text style={[styles.cardDesc, { color: theme.subColor, marginBottom: 12 }]} maxFontSizeMultiplier={1.15}>
+          Logística puerta a puerta con choferes certificados.
+        </Text>
+
         {/* Desplegable interactivo para elegir el recorrido */}
-        <Text style={[styles.fieldLabel, { color: theme.subColor }]}>RECORRIDO ASIGNADO</Text>
+        <Text style={[styles.fieldLabel, { color: theme.subColor }]} maxFontSizeMultiplier={1.1}>RECORRIDO ASIGNADO</Text>
         
         <TouchableOpacity
           onPress={() => setIsDropdownOpen((prev) => !prev)}
@@ -345,15 +346,17 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
               color={transporteRecorrido !== 'none' ? '#EA580C' : theme.subColor}
               style={{ marginRight: 8 }}
             />
-            <Text style={[styles.dropdownSelectedText, { color: theme.titleColor }]} numberOfLines={1}>
+            <Text style={[styles.dropdownSelectedText, { color: theme.titleColor }]} numberOfLines={1} maxFontSizeMultiplier={1.15}>
               {selectedRouteLabel}
             </Text>
           </View>
-          <MaterialIcons
-            name={isDropdownOpen ? 'expand-less' : 'expand-more'}
-            size={22}
-            color={theme.subColor}
-          />
+          <View style={styles.dropdownChevronBox}>
+            <MaterialIcons
+              name={isDropdownOpen ? 'expand-less' : 'expand-more'}
+              size={22}
+              color={theme.subColor}
+            />
+          </View>
         </TouchableOpacity>
 
         {/* Opciones desplegables */}
@@ -417,54 +420,55 @@ export const StudentServicesTab: React.FC<StudentServicesTabProps> = ({
             <MaterialIcons name="restaurant" size={20} color="#D97706" />
           </View>
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={[styles.cardTitle, { color: theme.titleColor }]}>
+            <Text style={[styles.cardTitle, { color: theme.titleColor }]} maxFontSizeMultiplier={1.2}>
               Comedor Escolar <Text style={styles.rfTag}>(RF-17)</Text>
             </Text>
-            <Text style={[styles.cardDesc, { color: theme.subColor }]}>
-              Almuerzo y colación supervisados por nutricionistas.
-            </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            {isDiningActive ? (
-              isDiningConfirmed ? (
-                <View style={styles.confirmedPill}>
-                  <View style={styles.greenDot} />
-                  <Text style={styles.confirmedText}>Confirmado</Text>
-                </View>
-              ) : (
-                <View style={styles.pendingPill}>
-                  <View style={styles.amberDot} />
-                  <Text style={styles.pendingText}>Solicitud Pendiente</Text>
-                </View>
-              )
-            ) : (
-              <View style={[styles.noServicePill, { backgroundColor: theme.boxBg, borderColor: theme.border }]}>
-                <Text style={[styles.noServiceText, { color: theme.subColor }]}>Inactivo</Text>
+          <Switch
+            value={usaComedor}
+            onValueChange={setUsaComedor}
+            trackColor={{ false: theme.border, true: '#EA580C' }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+
+        {/* Fila intermedia con descripción y píldora de estado */}
+        <View style={styles.serviceMetaRow}>
+          <Text style={[styles.cardDesc, { color: theme.subColor, flex: 1, marginRight: 8 }]} maxFontSizeMultiplier={1.15}>
+            Almuerzo y colación supervisados por nutricionistas.
+          </Text>
+          {isDiningActive ? (
+            isDiningConfirmed ? (
+              <View style={styles.confirmedPill}>
+                <View style={styles.greenDot} />
+                <Text style={styles.confirmedText} maxFontSizeMultiplier={1.1}>Confirmado</Text>
               </View>
-            )}
-
-            <Switch
-              value={usaComedor}
-              onValueChange={setUsaComedor}
-              trackColor={{ false: theme.border, true: '#EA580C' }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
+            ) : (
+              <View style={styles.pendingPill}>
+                <View style={styles.amberDot} />
+                <Text style={styles.pendingText} maxFontSizeMultiplier={1.1}>Solicitud Pendiente</Text>
+              </View>
+            )
+          ) : (
+            <View style={[styles.noServicePill, { backgroundColor: theme.boxBg, borderColor: theme.border }]}>
+              <Text style={[styles.noServiceText, { color: theme.subColor }]} maxFontSizeMultiplier={1.1}>Inactivo</Text>
+            </View>
+          )}
         </View>
 
         <View style={[styles.diningInfoBox, { backgroundColor: usaComedor ? 'rgba(217, 119, 6, 0.08)' : theme.boxBg }]}>
           <View style={styles.diningStatusRow}>
-            <Text style={[styles.diningStatusTitle, { color: theme.titleColor }]}>
+            <Text style={[styles.diningStatusTitle, { color: theme.titleColor }]} maxFontSizeMultiplier={1.15}>
               {usaComedor ? 'Plan Nutricional Activo' : 'Servicio Inactivo'}
             </Text>
             {usaComedor && (
               <View style={styles.monthlyBadge}>
-                <Text style={styles.monthlyBadgeText}>Mensual</Text>
+                <Text style={styles.monthlyBadgeText} maxFontSizeMultiplier={1.1}>Mensual</Text>
               </View>
             )}
           </View>
-          <Text style={[styles.diningDesc, { color: theme.subColor }]}>
+          <Text style={[styles.diningDesc, { color: theme.subColor }]} maxFontSizeMultiplier={1.15}>
             {usaComedor
               ? 'Menú supervisado por profesionales de la salud. Incluye plato principal, postre y bebida.'
               : 'El estudiante no utiliza el servicio de comedor escolar en este ciclo.'}
@@ -709,7 +713,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
+    paddingLeft: 14,
+    paddingRight: 10,
     paddingVertical: 12,
     borderRadius: 14,
     borderWidth: 1,
@@ -718,7 +723,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    marginRight: 8,
+    marginRight: 6,
+  },
+  dropdownChevronBox: {
+    paddingLeft: 4,
+    paddingRight: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   dropdownSelectedText: {
     fontSize: 13,
@@ -752,6 +763,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#0284C7',
   },
+  serviceMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 10,
+  },
   diningInfoBox: {
     padding: 12,
     borderRadius: 12,
@@ -761,6 +780,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   diningStatusTitle: {
     fontSize: 13,
@@ -768,13 +789,13 @@ const styles = StyleSheet.create({
   },
   monthlyBadge: {
     backgroundColor: '#D97706',
-    paddingHorizontal: 7,
-    paddingVertical: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
     borderRadius: 8,
   },
   monthlyBadgeText: {
     color: '#FFFFFF',
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: '800',
   },
   diningDesc: {

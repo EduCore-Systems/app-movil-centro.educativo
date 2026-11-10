@@ -243,8 +243,11 @@ export const FamilyChatTab: React.FC<FamilyChatTabProps> = ({
             >
               <MaterialIcons name="arrow-back" size={20} color={theme.titleColor} />
             </TouchableOpacity>
-            <Text style={[styles.headerTitle, { color: theme.titleColor }]} numberOfLines={1}>
-              Mensajes y Consultas Oficiales
+            <Text
+              style={[styles.headerTitle, { color: theme.titleColor }]}
+              maxFontSizeMultiplier={1.15}
+            >
+              Mensajes y Consultas
             </Text>
           </View>
 
@@ -254,11 +257,11 @@ export const FamilyChatTab: React.FC<FamilyChatTabProps> = ({
             activeOpacity={0.8}
           >
             <MaterialIcons name="add-comment" size={15} color="#FFFFFF" style={{ marginRight: 5 }} />
-            <Text style={styles.newChatBtnText}>Nueva Consulta</Text>
+            <Text style={styles.newChatBtnText} maxFontSizeMultiplier={1.15}>Nueva Consulta</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.headerSubtitle, { color: theme.subColor }]}>
+        <Text style={[styles.headerSubtitle, { color: theme.subColor }]} maxFontSizeMultiplier={1.15}>
           Canal institucional para comunicarse con los docentes de{' '}
           <Text style={{ fontWeight: '700', color: '#EA580C' }}>{student.nombre}</Text>.
         </Text>
@@ -344,6 +347,7 @@ export const FamilyChatTab: React.FC<FamilyChatTabProps> = ({
                         styles.bubbleSender,
                         { color: isMe ? '#FFFFFF' : '#EA580C' },
                       ]}
+                      maxFontSizeMultiplier={1.15}
                     >
                       {msg.senderName}
                     </Text>
@@ -352,6 +356,7 @@ export const FamilyChatTab: React.FC<FamilyChatTabProps> = ({
                         styles.bubbleTime,
                         { color: isMe ? 'rgba(255,255,255,0.8)' : theme.subColor },
                       ]}
+                      maxFontSizeMultiplier={1.1}
                     >
                       {formatTime}
                     </Text>
@@ -523,12 +528,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
   },
   headerTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    minWidth: 160,
     marginRight: 6,
   },
   backBtn: {
@@ -548,6 +555,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 20,
     flexShrink: 0,
+    alignSelf: 'center',
   },
   newChatBtnText: {
     color: '#FFFFFF',
@@ -616,7 +624,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   msgBubble: {
-    maxWidth: '82%',
+    maxWidth: '86%',
     padding: 12,
     borderRadius: 16,
   },
@@ -631,17 +639,20 @@ const styles = StyleSheet.create({
   bubbleHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'baseline',
+    flexWrap: 'wrap',
     marginBottom: 4,
-    gap: 8,
+    gap: 6,
   },
   bubbleSender: {
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
+    flexShrink: 1,
   },
   bubbleTime: {
     fontSize: 9.5,
+    flexShrink: 0,
   },
   bubbleText: {
     fontSize: 12.5,
