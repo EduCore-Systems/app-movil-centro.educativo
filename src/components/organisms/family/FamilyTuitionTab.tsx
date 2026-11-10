@@ -611,13 +611,19 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
             >
               {/* Fila Cabecera de la Tarjeta */}
               <View style={styles.cardHeaderRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.periodTitle, { color: theme.titleColor }]}>
+                <View style={{ flex: 1, minWidth: 140 }}>
+                  <Text
+                    style={[styles.periodTitle, { color: theme.titleColor }]}
+                    maxFontSizeMultiplier={1.15}
+                  >
                     {item.period || 'Cuota Escolar'}
                   </Text>
                   <View style={styles.dueDateRow}>
                     <MaterialIcons name="event" size={13} color={theme.subColor} style={{ marginRight: 4 }} />
-                    <Text style={[styles.dueDateText, { color: theme.subColor }]}>
+                    <Text
+                      style={[styles.dueDateText, { color: theme.subColor }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       Vencimiento: <Text style={{ fontWeight: '700', color: theme.titleColor }}>{item.dueDate}</Text>
                     </Text>
                   </View>
@@ -635,7 +641,7 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
                 >
                   <MaterialIcons
                     name={isPaid ? 'check-circle' : 'hourglass-top'}
-                    size={14}
+                    size={13}
                     color={isPaid ? theme.badgePaidText : theme.badgePendingText}
                     style={{ marginRight: 4 }}
                   />
@@ -644,6 +650,8 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
                       styles.statusBadgeText,
                       { color: isPaid ? theme.badgePaidText : theme.badgePendingText },
                     ]}
+                    maxFontSizeMultiplier={1.15}
+                    numberOfLines={1}
                   >
                     {isPaid ? 'Abonado' : 'Pendiente de Pago'}
                   </Text>
@@ -652,20 +660,36 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
 
               {/* Importe Total Destacado */}
               <View style={[styles.amountBanner, { backgroundColor: theme.inputBg }]}>
-                <View>
-                  <Text style={[styles.amountLabel, { color: theme.subColor }]}>IMPORTE TOTAL</Text>
-                  <Text style={[styles.amountValue, { color: theme.titleColor }]}>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={[styles.amountLabel, { color: theme.subColor }]}
+                    maxFontSizeMultiplier={1.1}
+                  >
+                    IMPORTE TOTAL
+                  </Text>
+                  <Text
+                    style={[styles.amountValue, { color: theme.titleColor }]}
+                    maxFontSizeMultiplier={1.2}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
                     ${item.totalAmount.toLocaleString('es-AR')}
                   </Text>
                 </View>
 
                 <View style={styles.paymentMethodMeta}>
-                  <Text style={[styles.amountLabel, { color: theme.subColor }]}>CONDICIÓN</Text>
+                  <Text
+                    style={[styles.amountLabel, { color: theme.subColor }]}
+                    maxFontSizeMultiplier={1.1}
+                  >
+                    CONDICIÓN
+                  </Text>
                   <Text
                     style={[
                       styles.conditionText,
                       { color: isPaid ? '#10B981' : '#EA580C' },
                     ]}
+                    maxFontSizeMultiplier={1.15}
                   >
                     {isPaid ? 'Al Día' : 'Exigible'}
                   </Text>
@@ -674,25 +698,40 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
 
               {/* Desglose Transparente de Servicios (Rúbrica: Importe) */}
               <View style={[styles.breakdownBox, { borderColor: theme.border }]}>
-                <Text style={[styles.breakdownTitle, { color: theme.subColor }]}>
+                <Text
+                  style={[styles.breakdownTitle, { color: theme.subColor }]}
+                  maxFontSizeMultiplier={1.1}
+                >
                   DESGLOSE ARANCELARIO DETALLADO:
                 </Text>
 
                 <View style={styles.breakdownRow}>
-                  <Text style={[styles.breakdownItemName, { color: theme.titleColor }]}>
+                  <Text
+                    style={[styles.breakdownItemName, { color: theme.titleColor }]}
+                    maxFontSizeMultiplier={1.15}
+                  >
                     • Cuota Pedagógica Base
                   </Text>
-                  <Text style={[styles.breakdownItemVal, { color: theme.titleColor }]}>
+                  <Text
+                    style={[styles.breakdownItemVal, { color: theme.titleColor }]}
+                    maxFontSizeMultiplier={1.15}
+                  >
                     ${(item.baseTuition || 42000).toLocaleString('es-AR')}
                   </Text>
                 </View>
 
                 {item.diningAmount !== undefined && item.diningAmount > 0 && (
                   <View style={styles.breakdownRow}>
-                    <Text style={[styles.breakdownItemName, { color: theme.titleColor }]}>
+                    <Text
+                      style={[styles.breakdownItemName, { color: theme.titleColor }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       • Servicio de Comedor Escolar
                     </Text>
-                    <Text style={[styles.breakdownItemVal, { color: theme.titleColor }]}>
+                    <Text
+                      style={[styles.breakdownItemVal, { color: theme.titleColor }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       ${item.diningAmount.toLocaleString('es-AR')}
                     </Text>
                   </View>
@@ -700,10 +739,16 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
 
                 {item.transportAmount !== undefined && item.transportAmount > 0 && (
                   <View style={styles.breakdownRow}>
-                    <Text style={[styles.breakdownItemName, { color: theme.titleColor }]}>
+                    <Text
+                      style={[styles.breakdownItemName, { color: theme.titleColor }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       • Recorrido de Transporte Escolar
                     </Text>
-                    <Text style={[styles.breakdownItemVal, { color: theme.titleColor }]}>
+                    <Text
+                      style={[styles.breakdownItemVal, { color: theme.titleColor }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       ${item.transportAmount.toLocaleString('es-AR')}
                     </Text>
                   </View>
@@ -711,10 +756,16 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
 
                 {item.sportsAmount !== undefined && item.sportsAmount > 0 && (
                   <View style={styles.breakdownRow}>
-                    <Text style={[styles.breakdownItemName, { color: theme.titleColor }]}>
+                    <Text
+                      style={[styles.breakdownItemName, { color: theme.titleColor }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       • Talleres y Prácticas Deportivas
                     </Text>
-                    <Text style={[styles.breakdownItemVal, { color: theme.titleColor }]}>
+                    <Text
+                      style={[styles.breakdownItemVal, { color: theme.titleColor }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       ${item.sportsAmount.toLocaleString('es-AR')}
                     </Text>
                   </View>
@@ -1087,6 +1138,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
     gap: 8,
   },
   periodTitle: {
@@ -1105,10 +1157,11 @@ const styles = StyleSheet.create({
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 20,
     borderWidth: 1,
+    flexShrink: 0,
   },
   statusBadgeText: {
     fontSize: 10,
@@ -1130,7 +1183,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   amountValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '900',
     marginTop: 2,
     letterSpacing: -0.5,
@@ -1160,14 +1213,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
   },
   breakdownItemName: {
     fontSize: 12,
     fontWeight: '500',
+    flex: 1,
   },
   breakdownItemVal: {
     fontSize: 12,
     fontWeight: '700',
+    flexShrink: 0,
   },
 
   // Historial Banner
