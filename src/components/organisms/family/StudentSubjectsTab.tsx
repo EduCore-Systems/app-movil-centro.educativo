@@ -151,16 +151,18 @@ export const StudentSubjectsTab: React.FC<StudentSubjectsTabProps> = ({
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
           <MaterialIcons name="menu-book" size={20} color="#EA580C" style={{ marginRight: 6 }} />
-          <Text style={[styles.sectionTitle, { color: theme.titleColor }]}>Materias en Curso</Text>
+          <Text style={[styles.sectionTitle, { color: theme.titleColor }]} maxFontSizeMultiplier={1.2}>
+            Materias en Curso
+          </Text>
           {!loading && (
             <View style={[styles.badgePill, { backgroundColor: isDarkMode ? '#1E293B' : '#E2E8F0' }]}>
-              <Text style={[styles.badgePillText, { color: theme.subColor }]}>
+              <Text style={[styles.badgePillText, { color: theme.subColor }]} maxFontSizeMultiplier={1.15}>
                 {subjects.length} Asignaturas
               </Text>
             </View>
           )}
         </View>
-        <Text style={[styles.planText, { color: theme.subColor }]}>
+        <Text style={[styles.planText, { color: theme.subColor }]} maxFontSizeMultiplier={1.15}>
           Plan Académico Oficial · 2026
         </Text>
       </View>
@@ -180,35 +182,47 @@ export const StudentSubjectsTab: React.FC<StudentSubjectsTabProps> = ({
                 key={sub.id || idx}
                 style={[styles.subjectCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}
               >
-                {/* Cabecera de la materia */}
+                {/* Cabecera de la materia: Fila 1 = Ícono + Título + Estado */}
                 <View style={styles.cardHeader}>
-                  {/* Ícono 100% redondo */}
                   <View style={[styles.iconCircleRound, { backgroundColor: styleInfo.bg }]}>
                     <MaterialIcons name={styleInfo.icon} size={22} color={styleInfo.color} />
                   </View>
 
                   <View style={{ flex: 1, marginRight: 8 }}>
-                    <Text style={[styles.subjectTitle, { color: theme.titleColor }]} numberOfLines={1}>
+                    <Text
+                      style={[styles.subjectTitle, { color: theme.titleColor }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       {sub.name}
                     </Text>
-                    <View style={styles.teacherRow}>
-                      <MaterialIcons name="person" size={13} color={theme.subColor} style={{ marginRight: 3 }} />
-                      <Text style={[styles.teacherName, { color: theme.subColor }]} numberOfLines={1}>
-                        {sub.teacherName || 'Docente a cargo'}
-                      </Text>
-                    </View>
                   </View>
 
                   <View style={[styles.regularBadge, { backgroundColor: theme.pillBg }]}>
-                    <Text style={[styles.regularBadgeText, { color: theme.pillText }]}>En curso</Text>
+                    <Text style={[styles.regularBadgeText, { color: theme.pillText }]} maxFontSizeMultiplier={1.1}>
+                      En curso
+                    </Text>
                   </View>
+                </View>
+
+                {/* Fila 2 dedicada: Nombre completo del Docente en fila propia para máxima visibilidad */}
+                <View style={styles.teacherRowDedicated}>
+                  <MaterialIcons name="person" size={15} color="#EA580C" style={{ marginRight: 6 }} />
+                  <Text
+                    style={[styles.teacherNameFull, { color: theme.subColor }]}
+                    maxFontSizeMultiplier={1.15}
+                  >
+                    Docente: <Text style={{ fontWeight: '700', color: theme.titleColor }}>{sub.teacherName || 'Docente a cargo'}</Text>
+                  </Text>
                 </View>
 
                 {/* Footer de la materia con horario y botón de consulta */}
                 <View style={[styles.cardFooter, { borderTopColor: theme.border }]}>
                   <View style={styles.scheduleRow}>
-                    <MaterialIcons name="schedule" size={14} color={theme.subColor} style={{ marginRight: 4 }} />
-                    <Text style={[styles.scheduleText, { color: theme.subColor }]} numberOfLines={1}>
+                    <MaterialIcons name="schedule" size={14} color="#EA580C" style={{ marginRight: 6 }} />
+                    <Text
+                      style={[styles.scheduleText, { color: theme.titleColor }]}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       {sub.schedule || 'Turno Regular'}
                     </Text>
                   </View>
@@ -225,7 +239,7 @@ export const StudentSubjectsTab: React.FC<StudentSubjectsTabProps> = ({
                     activeOpacity={0.7}
                   >
                     <MaterialIcons name="chat" size={14} color="#EA580C" style={{ marginRight: 4 }} />
-                    <Text style={styles.chatBtnText}>Consultar docente</Text>
+                    <Text style={styles.chatBtnText} maxFontSizeMultiplier={1.15}>Consultar docente</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -254,6 +268,8 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 17,
@@ -261,9 +277,8 @@ const styles = StyleSheet.create({
   },
   badgePill: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 12,
-    marginLeft: 8,
   },
   badgePillText: {
     fontSize: 11,
@@ -294,10 +309,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
+    gap: 8,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   // Contorno 100% redondo
   iconCircleRound: {
@@ -312,14 +329,19 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-  teacherRow: {
+  teacherRowDedicated: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 3,
+    backgroundColor: 'rgba(234, 88, 12, 0.05)',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 10,
+    marginTop: 2,
   },
-  teacherName: {
-    fontSize: 12,
+  teacherNameFull: {
+    fontSize: 12.5,
     fontWeight: '500',
+    flex: 1,
   },
   regularBadge: {
     paddingHorizontal: 8,
@@ -331,33 +353,35 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     marginTop: 12,
     paddingTop: 10,
     borderTopWidth: 1,
+    gap: 8,
   },
   scheduleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    marginRight: 8,
+    width: '100%',
   },
   scheduleText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
+    flex: 1,
   },
   chatBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    alignSelf: 'flex-end',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgba(234, 88, 12, 0.08)',
   },
   chatBtnText: {
     color: '#EA580C',
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '700',
   },
 });

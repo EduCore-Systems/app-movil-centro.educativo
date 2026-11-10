@@ -45,7 +45,11 @@ export const TeacherTopBar: React.FC<TeacherTopBarProps> = ({
           <MaterialIcons name="menu" size={24} color={theme.titleColor} />
         </TouchableOpacity>
 
-        <Text style={[styles.portalTitle, { color: theme.titleColor }]} numberOfLines={1}>
+        <Text
+          style={[styles.portalTitle, { color: theme.titleColor }]}
+          numberOfLines={1}
+          maxFontSizeMultiplier={1.15}
+        >
           Panel Docente
         </Text>
       </View>
@@ -55,7 +59,11 @@ export const TeacherTopBar: React.FC<TeacherTopBarProps> = ({
         {/* Píldora de Fecha Corta (no invasiva) */}
         <View style={[styles.datePill, { backgroundColor: theme.datePillBg }]}>
           <MaterialIcons name="calendar-today" size={11} color="#EA580C" style={{ marginRight: 4 }} />
-          <Text style={[styles.datePillText, { color: theme.subColor }]}>
+          <Text
+            style={[styles.datePillText, { color: theme.subColor }]}
+            numberOfLines={1}
+            maxFontSizeMultiplier={1.15}
+          >
             9 nov 2026
           </Text>
         </View>

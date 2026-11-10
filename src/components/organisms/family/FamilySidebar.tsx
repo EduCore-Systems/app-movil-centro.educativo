@@ -75,6 +75,16 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({
       isActive: activeTab === 'servicios',
     },
     {
+      id: 'cuotas',
+      label: 'Gestión de Cuotas',
+      icon: 'account-balance-wallet',
+      action: () => {
+        onSelectTab('cuotas');
+        onClose();
+      },
+      isActive: activeTab === 'cuotas',
+    },
+    {
       id: 'documentacion',
       label: 'Documentación Oficial',
       icon: 'description',

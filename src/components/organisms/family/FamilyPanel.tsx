@@ -19,6 +19,7 @@ import LinkStudentModal from '../../molecules/family/LinkStudentModal';
 import StudentProfileTab from './StudentProfileTab';
 import StudentSubjectsTab from './StudentSubjectsTab';
 import StudentServicesTab from './StudentServicesTab';
+import FamilyTuitionTab from './FamilyTuitionTab';
 import FamilyChatTab from './FamilyChatTab';
 import FamilyDocumentModal from './FamilyDocumentModal';
 import { getChildrenForParent, FamilyStudent } from '../../../services/familyService';
@@ -178,7 +179,9 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
               activeOpacity={0.8}
             >
               <MaterialIcons name="download" size={16} color={theme.subColor} style={{ marginRight: 6 }} />
-              <Text style={[styles.docBtnOutlineText, { color: theme.titleColor }]}>Boletín Actual</Text>
+              <Text style={[styles.docBtnOutlineText, { color: theme.titleColor }]} maxFontSizeMultiplier={1.15} numberOfLines={1}>
+                Boletín Actual
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -187,7 +190,9 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
               activeOpacity={0.8}
             >
               <MaterialIcons name="verified" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.docBtnFilledText}>Certificado Regular</Text>
+              <Text style={styles.docBtnFilledText} maxFontSizeMultiplier={1.15} numberOfLines={1}>
+                Certificado Regular
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -287,7 +292,17 @@ export const FamilyPanel: React.FC<FamilyPanelProps> = ({
               />
             )}
 
-            {/* 4. Consultas con Docentes (Fase 3 - Sincronizado en tiempo real) */}
+            {/* 4. Gestión de Cuotas y Aranceles (Módulo 2 Coevaluación) */}
+            {activeTab === 'cuotas' && (
+              <FamilyTuitionTab
+                student={selectedStudent}
+                user={user}
+                isDarkMode={isDarkMode}
+                onBackToDashboard={() => handleSelectTab('resumen')}
+              />
+            )}
+
+            {/* 5. Consultas con Docentes (Fase 3 - Sincronizado en tiempo real) */}
             {activeTab === 'chat' && (
               <FamilyChatTab
                 student={selectedStudent}
@@ -389,14 +404,18 @@ const styles = StyleSheet.create({
   },
   docButtonsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginTop: 4,
   },
   docBtnOutline: {
+    flex: 1,
+    minWidth: 140,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 14,
     borderWidth: 1,
   },
@@ -405,11 +424,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   docBtnFilled: {
+    flex: 1,
+    minWidth: 140,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#EA580C',
-    paddingHorizontal: 16,
-    paddingVertical: 9,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 14,
     shadowColor: '#EA580C',
     shadowOffset: { width: 0, height: 4 },

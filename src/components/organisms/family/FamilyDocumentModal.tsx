@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
@@ -279,18 +280,35 @@ export const FamilyDocumentModal: React.FC<FamilyDocumentModalProps> = ({
     try {
       setIsGenerating(true);
       const html = generateOfficialHtml();
-      const { uri } = await Print.printToFileAsync({ html });
 
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, {
-          UTI: '.pdf',
-          mimeType: 'application/pdf',
-          dialogTitle: isBoletin
-            ? `Boletin_${studentName.replace(/\s+/g, '_')}.pdf`
-            : `Certificado_${studentName.replace(/\s+/g, '_')}.pdf`,
-        });
-      } else {
+      if (Platform.OS === 'web') {
         await Print.printAsync({ html });
+      } else {
+        let sharedSuccessfully = false;
+        try {
+          const isShareAvailable = await Sharing.isAvailableAsync();
+          if (isShareAvailable) {
+            const { uri } = await Print.printToFileAsync({ html });
+            let targetUri = uri;
+            if (!targetUri.startsWith('file://')) {
+              targetUri = `file://${targetUri}`;
+            }
+            await Sharing.shareAsync(targetUri, {
+              UTI: '.pdf',
+              mimeType: 'application/pdf',
+              dialogTitle: isBoletin
+                ? `Boletin_${studentName.replace(/\s+/g, '_')}.pdf`
+                : `Certificado_${studentName.replace(/\s+/g, '_')}.pdf`,
+            });
+            sharedSuccessfully = true;
+          }
+        } catch (shareErr) {
+          console.warn('Sharing no disponible o restringido por FileProvider en Android, abriendo PrintManager nativo:', shareErr);
+        }
+
+        if (!sharedSuccessfully) {
+          await Print.printAsync({ html });
+        }
       }
     } catch (err: any) {
       console.error('Error al generar PDF:', err);
