@@ -44,8 +44,8 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
   const [payReference, setPayReference] = useState('');
   const [isSubmittingPay, setIsSubmittingPay] = useState(false);
 
-  // Modal / Generación de Recibo PDF
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  // Modal / Generación de Recibo PDF (identificador de la tarjeta en proceso)
+  const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
 
   // Cargar pagos del estudiante
   const loadPayments = async () => {
@@ -128,7 +128,7 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
 
   // Acción: Descargar / Compartir Recibo Oficial en PDF
   const handleDownloadReceiptPdf = async (item: PaymentRecord) => {
-    setIsGeneratingPdf(true);
+    setGeneratingPdfId(item.id);
     try {
       const receiptCode = item.receiptNumber || `REC-2026-${Date.now().toString().slice(-5)}`;
       const issueDate = item.paidAt || new Date().toLocaleDateString('es-AR');
@@ -350,22 +350,25 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
       `;
 
       if (Platform.OS === 'web') {
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-          printWindow.document.write(htmlContent);
-          printWindow.document.close();
-          printWindow.focus();
-          printWindow.print();
-        }
+        await Print.printAsync({ html: htmlContent });
       } else {
+        const isShareAvailable = await Sharing.isAvailableAsync();
         const { uri } = await Print.printToFileAsync({ html: htmlContent });
-        await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+        if (isShareAvailable) {
+          await Sharing.shareAsync(uri, {
+            UTI: '.pdf',
+            mimeType: 'application/pdf',
+            dialogTitle: `Recibo_EduCore_${receiptCode}.pdf`,
+          });
+        } else {
+          await Print.printAsync({ html: htmlContent });
+        }
       }
     } catch (err) {
       console.error('Error al generar recibo oficial en PDF:', err);
       Alert.alert('Error', 'No se pudo generar el comprobante en PDF.');
     } finally {
-      setIsGeneratingPdf(false);
+      setGeneratingPdfId(null);
     }
   };
 
@@ -709,9 +712,9 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
                     style={[styles.actionBtnReceipt, { borderColor: '#10B981' }]}
                     onPress={() => handleDownloadReceiptPdf(item)}
                     activeOpacity={0.8}
-                    disabled={isGeneratingPdf}
+                    disabled={generatingPdfId !== null}
                   >
-                    {isGeneratingPdf ? (
+                    {generatingPdfId === item.id ? (
                       <ActivityIndicator size="small" color="#10B981" />
                     ) : (
                       <>
