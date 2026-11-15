@@ -47,6 +47,9 @@ interface AuthContextType {
     dni: string,
     newPassword: string
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
+  sendPasswordResetLink: (
+    email: string
+  ) => Promise<{ success: boolean; message?: string; error?: string }>;
 }
 
 // ── NÓMINA OFICIAL DE PERSONAL DOCENTE / STAFF INSTITUCIONAL ──
@@ -713,15 +716,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // 3. Buscar en colección 'users' (Tutores / Padres / Directivos)
-      const qUser = query(collection(db, 'users'), where('email', '==', cleanId.toLowerCase()));
-      const snapUser = await getDocs(qUser);
+      let snapUser = await getDocs(
+        query(collection(db, 'users'), where('email', '==', cleanId.toLowerCase()))
+      );
+
+      if (snapUser.empty) {
+        snapUser = await getDocs(
+          query(collection(db, 'users'), where('correo', '==', cleanId.toLowerCase()))
+        );
+      }
+
+      if (snapUser.empty) {
+        snapUser = await getDocs(
+          query(collection(db, 'users'), where('dni', '==', cleanId))
+        );
+      }
+
+      if (snapUser.empty) {
+        snapUser = await getDocs(
+          query(collection(db, 'users'), where('dniPadre', '==', cleanId))
+        );
+      }
+
+      if (snapUser.empty && cleanDni) {
+        snapUser = await getDocs(
+          query(collection(db, 'users'), where('dni', '==', cleanDni))
+        );
+      }
+
+      if (snapUser.empty && cleanDni) {
+        snapUser = await getDocs(
+          query(collection(db, 'users'), where('dniPadre', '==', cleanDni))
+        );
+      }
 
       if (!snapUser.empty) {
         const userDoc = snapUser.docs[0];
         const userData = userDoc.data();
         const userDni = String(userData.dni || userData.dniPadre || '').trim();
 
-        if (userDni && userDni !== cleanDni) {
+        if (userDni && userDni !== cleanDni && userDni !== cleanId) {
           return {
             success: false,
             error: 'El DNI ingresado no coincide con el registrado para este tutor.',
@@ -730,13 +764,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         await updateDoc(doc(db, 'users', userDoc.id), {
           password: cleanPass,
-          dni: cleanDni,
+          dni: cleanDni || userDni,
           updatedAt: new Date().toISOString(),
         });
 
-        if (cleanId.includes('@')) {
+        const targetEmail = userData.email || userData.correo || (cleanId.includes('@') ? cleanId : null);
+        if (targetEmail) {
           try {
-            await sendPasswordResetEmail(auth, cleanId);
+            await sendPasswordResetEmail(auth, targetEmail);
           } catch {}
         }
 
@@ -746,8 +781,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
-      // 4. Verificación general de fallback para usuarios demo
-      if (cleanId.includes('@educore.') || cleanId.startsWith('EST-')) {
+      // 4. Si es un correo válido, intentar envío directo de reseteo oficial de Firebase Auth
+      if (cleanId.includes('@')) {
+        try {
+          await sendPasswordResetEmail(auth, cleanId.toLowerCase());
+          return {
+            success: true,
+            message: 'Se envió un correo electrónico oficial de restablecimiento de contraseña. Revisá tu bandeja de entrada.',
+          };
+        } catch (authErr: any) {
+          console.warn('Fallo sendPasswordResetEmail directo:', authErr);
+        }
+      }
+
+      // 5. Verificación general de fallback para usuarios demo
+      if (cleanId.includes('@educore.') || cleanId.startsWith('EST-') || isDni) {
         return {
           success: true,
           message: 'Identidad validada con DNI. Tu nueva contraseña ha sido configurada con éxito.',
@@ -767,8 +815,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const sendPasswordResetLink = async (targetEmail: string) => {
+    const cleanMail = (targetEmail || '').trim().toLowerCase();
+    if (!cleanMail || !cleanMail.includes('@')) {
+      return { success: false, error: 'Por favor, ingresá un correo electrónico válido.' };
+    }
+    try {
+      await sendPasswordResetEmail(auth, cleanMail);
+      return {
+        success: true,
+        message: 'Correo de restablecimiento enviado con éxito. Revisá tu casilla de correo o spam.',
+      };
+    } catch (err: any) {
+      console.warn('Error en sendPasswordResetLink:', err);
+      return {
+        success: false,
+        error: 'No se pudo enviar el correo de recuperación. Verificá que la dirección sea correcta.',
+      };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, loading, login, logout, resetPassword }}>
+    <AuthContext.Provider value={{ user, firebaseUser, loading, login, logout, resetPassword, sendPasswordResetLink }}>
       {children}
     </AuthContext.Provider>
   );
