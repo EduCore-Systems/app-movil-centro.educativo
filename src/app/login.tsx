@@ -157,7 +157,7 @@ export default function LoginScreen() {
             <Ionicons name="mail-outline" size={20} color="#94A3B8" style={styles.inputIconLeft} />
             <TextInput
               style={styles.input}
-              placeholder="ej. usuario@email.com, DNI o EST-2026-401"
+              placeholder="Ingresá tu correo electrónico, DNI o legajo"
               placeholderTextColor="#94A3B8"
               keyboardType="default"
               autoCapitalize="none"
@@ -227,7 +227,7 @@ export default function LoginScreen() {
           <View style={styles.helpBox}>
             <Ionicons name="information-circle-outline" size={16} color="#64748B" style={{ marginRight: 6 }} />
             <Text style={styles.helpText}>
-              Personal Docente y Padres: Ingresan con correo o DNI. Alumnos con su Legajo EST-2026-XXX o DNI.
+              Personal Docente y Familias: Ingresan con su correo electrónico o DNI. Alumnos con su número de legajo o DNI.
             </Text>
           </View>
         </View>
@@ -292,7 +292,7 @@ export default function LoginScreen() {
                 <Ionicons name="mail-outline" size={18} color="#94A3B8" style={styles.inputIconLeft} />
                 <TextInput
                   style={styles.input}
-                  placeholder="ej. familia.diaz@educore.com o EST-2026-401"
+                  placeholder="Ingresá tu correo electrónico, legajo o DNI"
                   placeholderTextColor="#94A3B8"
                   autoCapitalize="none"
                   value={resetIdentifier}
@@ -306,7 +306,7 @@ export default function LoginScreen() {
                 <Ionicons name="card-outline" size={18} color="#94A3B8" style={styles.inputIconLeft} />
                 <TextInput
                   style={styles.input}
-                  placeholder="ej. 46777888 (sin puntos)"
+                  placeholder="Ingresá el número de documento (sin puntos)"
                   placeholderTextColor="#94A3B8"
                   keyboardType="numeric"
                   value={resetDni}
