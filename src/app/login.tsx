@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen() {
-  const { login, resetPassword } = useAuth();
+  const { login, resetPassword, sendPasswordResetLink } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -83,6 +83,24 @@ export default function LoginScreen() {
     }
   };
 
+  const handleSendEmailLink = async () => {
+    setResetError('');
+    setResetSuccess('');
+    const target = (resetIdentifier || email || '').trim();
+    if (!target || !target.includes('@')) {
+      setResetError('Ingresá un correo electrónico válido arriba para enviarte el enlace oficial.');
+      return;
+    }
+    setResetLoading(true);
+    const res = await sendPasswordResetLink(target);
+    setResetLoading(false);
+    if (res.success) {
+      setResetSuccess(res.message || 'Correo de restablecimiento enviado con éxito.');
+    } else {
+      setResetError(res.error || 'No se pudo enviar el correo de recuperación.');
+    }
+  };
+
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       setErrorMessage('Por favor, completa todos los campos.');
@@ -139,7 +157,7 @@ export default function LoginScreen() {
             <Ionicons name="mail-outline" size={20} color="#94A3B8" style={styles.inputIconLeft} />
             <TextInput
               style={styles.input}
-              placeholder="ej. usuario@email.com, DNI o EST-2026-401"
+              placeholder="Ingresá tu correo electrónico, DNI o legajo"
               placeholderTextColor="#94A3B8"
               keyboardType="default"
               autoCapitalize="none"
@@ -209,7 +227,7 @@ export default function LoginScreen() {
           <View style={styles.helpBox}>
             <Ionicons name="information-circle-outline" size={16} color="#64748B" style={{ marginRight: 6 }} />
             <Text style={styles.helpText}>
-              Personal Docente y Padres: Ingresan con correo o DNI. Alumnos con su Legajo EST-2026-XXX o DNI.
+              Personal Docente y Familias: Ingresan con su correo electrónico o DNI. Alumnos con su número de legajo o DNI.
             </Text>
           </View>
         </View>
@@ -274,7 +292,7 @@ export default function LoginScreen() {
                 <Ionicons name="mail-outline" size={18} color="#94A3B8" style={styles.inputIconLeft} />
                 <TextInput
                   style={styles.input}
-                  placeholder="ej. familia.diaz@educore.com o EST-2026-401"
+                  placeholder="Ingresá tu correo electrónico, legajo"
                   placeholderTextColor="#94A3B8"
                   autoCapitalize="none"
                   value={resetIdentifier}
@@ -288,7 +306,7 @@ export default function LoginScreen() {
                 <Ionicons name="card-outline" size={18} color="#94A3B8" style={styles.inputIconLeft} />
                 <TextInput
                   style={styles.input}
-                  placeholder="ej. 46777888 (sin puntos)"
+                  placeholder="Ingresá el número de documento (sin puntos)"
                   placeholderTextColor="#94A3B8"
                   keyboardType="numeric"
                   value={resetDni}
@@ -335,7 +353,7 @@ export default function LoginScreen() {
                 />
               </View>
 
-              {/* Botón de Acción */}
+              {/* Botón de Acción Principal */}
               <TouchableOpacity
                 style={[styles.button, { marginTop: 8 }]}
                 activeOpacity={0.8}
@@ -345,8 +363,25 @@ export default function LoginScreen() {
                 {resetLoading ? (
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
-                  <Text style={styles.buttonText}>Actualizar Contraseña</Text>
+                  <Text style={styles.buttonText}>Actualizar Contraseña con DNI</Text>
                 )}
+              </TouchableOpacity>
+
+              {/* Divisor con opción alternativa */}
+              <View style={styles.modalDividerRow}>
+                <View style={styles.modalDividerLine} />
+                <Text style={styles.modalDividerText}>O RECIBIR ENLACE POR EMAIL</Text>
+                <View style={styles.modalDividerLine} />
+              </View>
+
+              <TouchableOpacity
+                style={styles.modalEmailLinkBtn}
+                activeOpacity={0.8}
+                onPress={handleSendEmailLink}
+                disabled={resetLoading}
+              >
+                <Ionicons name="paper-plane-outline" size={16} color="#EA580C" style={{ marginRight: 6 }} />
+                <Text style={styles.modalEmailLinkText}>Enviar correo de restablecimiento</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -654,7 +689,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   modalCancelButton: {
-    marginTop: 12,
+    marginTop: 8,
     paddingVertical: 10,
     alignItems: 'center',
   },
@@ -662,5 +697,38 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#64748B',
+  },
+  modalDividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 14,
+    gap: 8,
+  },
+  modalDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E2E8F0',
+  },
+  modalDividerText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#94A3B8',
+    letterSpacing: 0.5,
+  },
+  modalEmailLinkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1.5,
+    borderColor: '#FDBA74',
+    borderRadius: 12,
+    height: 44,
+    paddingHorizontal: 12,
+  },
+  modalEmailLinkText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#EA580C',
   },
 });

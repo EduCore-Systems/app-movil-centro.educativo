@@ -89,7 +89,7 @@ export const LinkStudentModal: React.FC<LinkStudentModalProps> = ({
                   <MaterialIcons name="badge" size={20} color={theme.subColor} style={{ marginRight: 10 }} />
                   <TextInput
                     style={[styles.input, { color: theme.inputText }]}
-                    placeholder="ej. 46777888"
+                    placeholder="Ingresá el número de DNI sin puntos"
                     placeholderTextColor={theme.subColor}
                     keyboardType="numeric"
                     value={dni}

@@ -796,6 +796,9 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
                 </View>
               )}
 
+              {/* Divisor antes de las acciones */}
+              <View style={[styles.cardDivider, { backgroundColor: theme.border }]} />
+
               {/* Botones de Acción */}
               <View style={styles.cardActionsRow}>
                 {isPaid ? (
@@ -953,7 +956,7 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
               </View>
             </ScrollView>
 
-            {/* Footer Modal con Botón Confirmar */}
+            {/* Footer Modal con Botón Confirmar y Divisor */}
             <View style={[styles.modalFooter, { borderTopColor: theme.border }]}>
               <TouchableOpacity
                 style={[styles.modalCancelBtn, { borderColor: theme.border }]}
@@ -962,6 +965,8 @@ export const FamilyTuitionTab: React.FC<FamilyTuitionTabProps> = ({
               >
                 <Text style={[styles.modalCancelText, { color: theme.subColor }]}>Cancelar</Text>
               </TouchableOpacity>
+
+              <View style={[styles.buttonVerticalDivider, { backgroundColor: theme.border }]} />
 
               <TouchableOpacity
                 style={styles.modalConfirmBtn}
@@ -1421,6 +1426,18 @@ const styles = StyleSheet.create({
     fontSize: 11,
     flex: 1,
     lineHeight: 16,
+  },
+  cardDivider: {
+    height: 1,
+    width: '100%',
+    marginVertical: 12,
+    opacity: 0.6,
+  },
+  buttonVerticalDivider: {
+    width: 1,
+    height: '80%',
+    alignSelf: 'center',
+    opacity: 0.5,
   },
   modalFooter: {
     flexDirection: 'row',
