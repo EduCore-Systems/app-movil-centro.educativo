@@ -292,7 +292,7 @@ export default function LoginScreen() {
                 <Ionicons name="mail-outline" size={18} color="#94A3B8" style={styles.inputIconLeft} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Ingresá tu correo electrónico, legajo o DNI"
+                  placeholder="Ingresá tu correo electrónico, legajo"
                   placeholderTextColor="#94A3B8"
                   autoCapitalize="none"
                   value={resetIdentifier}
