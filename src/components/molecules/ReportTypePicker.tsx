@@ -10,6 +10,11 @@ export type ReportType =
   | 'teacher_level'
   | 'sport'
   | 'transport'
+  | 'financial_breakdown'
+  | 'payments_complete'
+  | 'payments_incomplete'
+  | 'sports_payments'
+  | 'transport_payments'
   | 'financial';
 
 interface ReportTypeOption {
@@ -26,7 +31,12 @@ const REPORT_OPTIONS: ReportTypeOption[] = [
   { key: 'teacher_level', label: '5. Docentes por Nivel Educativo', category: 'Listados Agrupados' },
   { key: 'sport', label: '6. Alumnos por Deporte', category: 'Listados Agrupados' },
   { key: 'transport', label: '7. Alumnos por Transporte', category: 'Listados Agrupados' },
-  { key: 'financial', label: '8. Estado de Cobranzas y Morosidad', category: 'Gestión Financiera' },
+  { key: 'financial_breakdown', label: '8. Desglose de Ingresos por Período y Concepto', category: 'Gestión Financiera y Cobranzas' },
+  { key: 'payments_complete', label: '9. Pagos Completos (Filtros por Año y Alumno)', category: 'Gestión Financiera y Cobranzas' },
+  { key: 'payments_incomplete', label: '10. Pagos Incompletos / Deuda (Filtros por Año y Alumno)', category: 'Gestión Financiera y Cobranzas' },
+  { key: 'sports_payments', label: '11. Pagos por Deporte, Nivel, Horario y Docente', category: 'Gestión Financiera y Cobranzas' },
+  { key: 'transport_payments', label: '12. Pagos por Recorrido de Transporte Escolar', category: 'Gestión Financiera y Cobranzas' },
+  { key: 'financial', label: '13. Balance General de Cobranzas y Morosidad', category: 'Gestión Financiera y Cobranzas' },
 ];
 
 interface ReportTypePickerProps {
@@ -55,7 +65,7 @@ export const ReportTypePicker: React.FC<ReportTypePickerProps> = ({
     categoryBg: isDarkMode ? '#1E293B' : '#F1F5F9',
   };
 
-  const categories = ['Reportes Individuales', 'Listados Agrupados', 'Gestión Financiera'];
+  const categories = ['Reportes Individuales', 'Listados Agrupados', 'Gestión Financiera y Cobranzas'];
 
   return (
     <>

@@ -40,16 +40,20 @@ export const getDefaultStudentPayments = (student: {
   const isTransport = !!(student.transportRouteId || student.transporte_recorrido);
   const isSports = !!(student.deportes && student.deportes.length > 0);
 
-  const base = 42000;
-  const dining = isComedor ? 12000 : 0;
-  const transport = isTransport ? 9500 : 0;
-  const sports = isSports ? 4500 : 0;
+  const isLucas =
+    (student.nombre && student.nombre.toLowerCase().includes('lucas alegre')) ||
+    student.dni === '65456456';
+
+  const base = isLucas ? 85000 : 42000;
+  const dining = isComedor ? (isLucas ? 32000 : 12000) : 0;
+  const transport = isTransport ? (isLucas ? 28000 : 9500) : 0;
+  const sports = isSports ? (isLucas ? 18000 : 4500) : 0;
   const total = base + dining + transport + sports;
 
   const name = student.nombre || 'Martina Díaz';
   const dni = student.dni || '46777888';
-  const curso = student.curso || '1° Año A';
-  const nivel = student.nivel || 'Secundaria';
+  const curso = student.curso || (isLucas ? 'Sala de 5 A' : '1° Año A');
+  const nivel = student.nivel || (isLucas ? 'Inicial' : 'Secundaria');
 
   return [
     {
