@@ -167,8 +167,8 @@ export const AdminReportsTab: React.FC<AdminReportsTabProps> = ({ isDarkMode = f
         const transportAmount = hasTransport ? 28000 : 0;
         const sportsAmount = hasSports ? 18000 : 0;
         const totalAmount = baseTuition + diningAmount + transportAmount + sportsAmount;
-        // Inyección activa de deuda para el usuario de prueba Lucas Alegre
-        const isPaid = isLucas ? false : (idx % 4 !== 0);
+        // Distribución equilibrada al 50% con deuda para demostración de reportes
+        const isPaid = isLucas ? false : (idx % 2 !== 0);
 
         base.push({
           id: `pay-${s.id}`,
