@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet, Linking, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface AdminSidebarProps {
@@ -25,6 +26,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   isDarkMode = false,
   onSwitchToFamily,
 }) => {
+  const insets = useSafeAreaInsets();
+
   const theme = {
     modalBg: isDarkMode ? '#0F172A' : '#FFFFFF',
     textPrimary: isDarkMode ? '#F8FAFC' : '#0F172A',
@@ -33,10 +36,26 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   };
 
   return (
-    <Modal visible={isOpen} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={isOpen}
+      transparent
+      animationType="fade"
+      presentationStyle="overFullScreen"
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
       <View style={styles.modalOverlay}>
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={onClose} />
-        <View style={[styles.sidebarContent, { backgroundColor: theme.modalBg }]}>
+        <View
+          style={[
+            styles.sidebarContent,
+            {
+              backgroundColor: theme.modalBg,
+              paddingTop: Math.max(insets.top, 24),
+              paddingBottom: Math.max(insets.bottom, 20),
+            },
+          ]}
+        >
           <View style={styles.sidebarHeader}>
             <View style={styles.sidebarBrandRow}>
               <View style={styles.sidebarBrandIcon}>
@@ -221,7 +240,7 @@ const styles = StyleSheet.create({
   sidebarContent: {
     width: 280,
     height: '100%',
-    padding: 20,
+    paddingHorizontal: 20,
     justifyContent: 'space-between',
   },
   sidebarHeader: {

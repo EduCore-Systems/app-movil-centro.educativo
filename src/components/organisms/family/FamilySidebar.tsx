@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet, Linking, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FamilyTab } from '../../molecules/family/FamilyNavTabs';
 
@@ -26,6 +27,7 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({
   onOpenDocument,
   isDarkMode = true,
 }) => {
+  const insets = useSafeAreaInsets();
   const initial = (tutorName || 'F').charAt(0).toUpperCase();
 
   const theme = {
@@ -107,11 +109,27 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({
   ];
 
   return (
-    <Modal visible={isOpen} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={isOpen}
+      transparent
+      animationType="fade"
+      presentationStyle="overFullScreen"
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
       <View style={styles.modalOverlay}>
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={onClose} />
         
-        <View style={[styles.sidebarContent, { backgroundColor: theme.modalBg }]}>
+        <View
+          style={[
+            styles.sidebarContent,
+            {
+              backgroundColor: theme.modalBg,
+              paddingTop: Math.max(insets.top, 24),
+              paddingBottom: Math.max(insets.bottom, 20),
+            },
+          ]}
+        >
           {/* ── 1. CABECERA DEL SIDEBAR ── */}
           <View style={styles.sidebarHeader}>
             <View style={styles.sidebarBrandRow}>
@@ -235,8 +253,6 @@ const styles = StyleSheet.create({
     width: 290,
     height: '100%',
     paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 20,
     justifyContent: 'space-between',
   },
   sidebarHeader: {
